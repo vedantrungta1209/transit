@@ -96,6 +96,7 @@ jobs:
       - name: Build and push Admin
         uses: docker/build-push-action@v5
         with:
-          context: apps/admin
+          context: .
+          file: apps/admin/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/admin:latest,ghcr.io/${{ github.repository }}/admin:${{ github.sha }}

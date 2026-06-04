@@ -45,7 +45,7 @@ jobs:
           DATABASE_URL: postgresql://transit:transit@localhost:5432/transit_test
 
       - run: npm run typecheck
-      - run: npm test -- --forceExit
+      - run: npm test -- --forceExit --runInBand
         env:
           DATABASE_URL: postgresql://transit:transit@localhost:5432/transit_test
           REDIS_URL: redis://localhost:6379

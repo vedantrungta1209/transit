@@ -7,7 +7,7 @@ const EXOTEL_SENDER = process.env.EXOTEL_SENDER_ID || 'TRNST';
 const BASE_URL = `https://api.exotel.com/v1/Accounts/${EXOTEL_SID}`;
 
 async function sendSms(to: string, body: string): Promise<void> {
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV !== 'production') {
     console.log(`[SMS] To: ${to} | Message: ${body}`);
     return;
   }

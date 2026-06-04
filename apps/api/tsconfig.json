@@ -6,5 +6,5 @@
     "baseUrl": ".",
     "paths": { "@transit/shared": ["../../packages/shared/src"] }
   },
-  "include": ["src/**/*", "prisma/seed.ts"]
+  "include": ["src/**/*"]
 }

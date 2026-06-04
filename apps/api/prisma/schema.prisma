@@ -154,8 +154,7 @@ model Ride {
 
   user             User     @relation("UserRides", fields: [userId], references: [id])
   driver           Driver?  @relation("DriverRides", fields: [driverId], references: [id])
-  ratingByUser     Rating?  @relation("RideUserRating")
-  ratingByDriver   Rating?  @relation("RideDriverRating")
+  ratings          Rating[]
 
   @@index([userId])
   @@index([driverId])
@@ -311,8 +310,7 @@ model Rating {
   comment      String?
   createdAt    DateTime @default(now())
 
-  ride         Ride    @relation("RideUserRating", fields: [rideId], references: [id], map: "Rating_rideId_user_fkey")
-  rideDriver   Ride?   @relation("RideDriverRating", fields: [rideId], references: [id], map: "Rating_rideId_driver_fkey")
+  ride         Ride    @relation(fields: [rideId], references: [id])
   fromUser     User?   @relation("RatingsFromUser", fields: [fromUserId], references: [id])
   toUser       User?   @relation("RatingsToUser", fields: [toUserId], references: [id])
   fromDriver   Driver? @relation("RatingsFromDriver", fields: [fromDriverId], references: [id])

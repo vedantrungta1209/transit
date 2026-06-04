@@ -5,7 +5,7 @@ import { sendToDevice } from '../services/fcm.service';
 import { createOrder } from '../services/razorpay.service';
 import { success, error } from '../utils/response';
 import { haversineDistance, generateOtp } from '@transit/shared';
-import { io } from '../server';
+import { getIo } from '../utils/io';
 import crypto from 'crypto';
 
 async function getFareRule(city: string, vehicleType: string) {
@@ -95,7 +95,7 @@ async function matchDriver(rideId: string, lat: number, lng: number, vehicleType
     );
 
   if (!nearby.length || attempt >= 4) {
-    io.to(`user:${(await prisma.ride.findUnique({ where: { id: rideId } }))?.userId}`).emit('no_drivers_found', { rideId });
+    getIo().to(`user:${(await prisma.ride.findUnique({ where: { id: rideId } }))?.userId}`).emit('no_drivers_found', { rideId });
     await prisma.ride.update({ where: { id: rideId }, data: { status: 'CANCELLED', cancellationReason: 'No drivers available' } });
     return;
   }
@@ -103,7 +103,7 @@ async function matchDriver(rideId: string, lat: number, lng: number, vehicleType
   const driver = nearby[attempt % nearby.length];
   const distToPickup = haversineDistance(lat, lng, driver.currentLat!, driver.currentLng!);
 
-  io.to(`driver:${driver.id}`).emit('ride_request', {
+  getIo().to(`driver:${driver.id}`).emit('ride_request', {
     rideId,
     pickupLat: lat, pickupLng: lng,
     distanceToPickup: distToPickup.toFixed(1),
@@ -134,7 +134,7 @@ export async function acceptRide(req: Request, res: Response) {
   });
   await prisma.driver.update({ where: { id: driverId }, data: { isAvailable: false } });
 
-  io.to(`user:${ride.userId}`).emit('driver_assigned', {
+  getIo().to(`user:${ride.userId}`).emit('driver_assigned', {
     rideId: id,
     driver: { id: updated.driver!.id, name: updated.driver!.name, phone: updated.driver!.phone, vehicleNumber: updated.driver!.vehicleNumber, vehicleModel: updated.driver!.vehicleModel },
   });
@@ -145,7 +145,7 @@ export async function acceptRide(req: Request, res: Response) {
 export async function arriveAtPickup(req: Request, res: Response) {
   const { id } = req.params;
   const ride = await prisma.ride.update({ where: { id }, data: { status: 'DRIVER_ARRIVING' } });
-  io.to(`user:${ride.userId}`).emit('ride_status_update', { rideId: id, status: 'DRIVER_ARRIVING' });
+  getIo().to(`user:${ride.userId}`).emit('ride_status_update', { rideId: id, status: 'DRIVER_ARRIVING' });
   success(res, ride);
 }
 
@@ -159,7 +159,7 @@ export async function startRide(req: Request, res: Response) {
   if (ride.otp !== otpHash) return error(res, 'Invalid OTP', 400);
 
   const updated = await prisma.ride.update({ where: { id }, data: { status: 'IN_PROGRESS', otpVerified: true } });
-  io.to(`user:${ride.userId}`).emit('ride_status_update', { rideId: id, status: 'IN_PROGRESS' });
+  getIo().to(`user:${ride.userId}`).emit('ride_status_update', { rideId: id, status: 'IN_PROGRESS' });
   success(res, updated);
 }
 
@@ -198,7 +198,7 @@ export async function completeRide(req: Request, res: Response) {
   await prisma.driver.update({ where: { id: ride.driverId }, data: { isAvailable: true, totalEarnings: { increment: actualFare } } });
   await prisma.driverEarning.create({ data: { driverId: ride.driverId, rideId: id, amount: actualFare, type: 'RIDE' } });
 
-  io.to(`user:${ride.userId}`).emit('ride_completed', { rideId: id, actualFare, razorpayOrderId });
+  getIo().to(`user:${ride.userId}`).emit('ride_completed', { rideId: id, actualFare, razorpayOrderId });
   success(res, updated);
 }
 
@@ -216,9 +216,9 @@ export async function cancelRide(req: Request, res: Response) {
 
   if (ride.driverId) {
     await prisma.driver.update({ where: { id: ride.driverId }, data: { isAvailable: true } });
-    io.to(`driver:${ride.driverId}`).emit('ride_status_update', { rideId: id, status: 'CANCELLED' });
+    getIo().to(`driver:${ride.driverId}`).emit('ride_status_update', { rideId: id, status: 'CANCELLED' });
   }
-  io.to(`user:${ride.userId}`).emit('ride_status_update', { rideId: id, status: 'CANCELLED' });
+  getIo().to(`user:${ride.userId}`).emit('ride_status_update', { rideId: id, status: 'CANCELLED' });
 
   success(res, updated);
 }

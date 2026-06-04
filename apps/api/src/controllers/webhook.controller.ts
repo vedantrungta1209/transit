@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { verifyWebhookSignature } from '../services/razorpay.service';
 import { success, error } from '../utils/response';
-import { io } from '../server';
+import { getIo } from '../utils/io';
 
 export async function razorpayWebhook(req: Request, res: Response) {
   const sig = req.headers['x-razorpay-signature'] as string;
@@ -26,7 +26,7 @@ export async function razorpayWebhook(req: Request, res: Response) {
           where: { id: rideId },
           data: { paymentStatus: 'PAID', razorpayPaymentId: paymentId },
         });
-        io.to(`user:${ride.userId}`).emit('payment_confirmed', { rideId });
+        getIo().to(`user:${ride.userId}`).emit('payment_confirmed', { rideId });
       } else if (receipt?.startsWith('wallet_')) {
         const userId = receipt.replace('wallet_', '');
         const amount = payload.payment.entity.amount / 100;

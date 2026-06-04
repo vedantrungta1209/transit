@@ -1,0 +1,397 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum VehicleType {
+  AUTO
+  CAB
+  EV_CAB
+  BIKE
+}
+
+enum RideStatus {
+  SEARCHING
+  DRIVER_ASSIGNED
+  DRIVER_ARRIVING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+  WALLET
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+}
+
+enum KycStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum BillingCycle {
+  WEEKLY
+  MONTHLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PAYMENT_FAILED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  CITY_ADMIN
+  SUPPORT
+}
+
+model User {
+  id             String   @id @default(cuid())
+  phone          String   @unique
+  name           String?
+  email          String?  @unique
+  profilePhoto   String?
+  walletBalance  Decimal  @default(0) @db.Decimal(10, 2)
+  isActive       Boolean  @default(true)
+  fcmToken       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  rides            Ride[]            @relation("UserRides")
+  savedAddresses   SavedAddress[]
+  ratingsGiven     Rating[]          @relation("RatingsFromUser")
+  ratingsReceived  Rating[]          @relation("RatingsToUser")
+  notifications    Notification[]
+  walletTxns       WalletTransaction[]
+}
+
+model Driver {
+  id               String      @id @default(cuid())
+  phone            String      @unique
+  name             String
+  email            String?     @unique
+  profilePhoto     String?
+  aadhaarLast4     String?     @db.Char(4)
+  aadhaarDocUrl    String?
+  licenceNumber    String?
+  licenceExpiry    DateTime?
+  licenceDocUrl    String?
+  selfieUrl        String?
+  vehicleType      VehicleType
+  vehicleNumber    String?
+  vehicleModel     String?
+  vehicleYear      Int?
+  currentLat       Float?
+  currentLng       Float?
+  heading          Float?
+  isOnline         Boolean     @default(false)
+  isAvailable      Boolean     @default(false)
+  walletBalance    Decimal     @default(0) @db.Decimal(10, 2)
+  totalEarnings    Decimal     @default(0) @db.Decimal(10, 2)
+  kycStatus        KycStatus   @default(PENDING)
+  isActive         Boolean     @default(true)
+  city             String
+  fcmToken         String?
+  razorpayContactId String?
+  razorpayFundAccountId String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  rides            Ride[]            @relation("DriverRides")
+  subscriptions    DriverSubscription[]
+  ratingsGiven     Rating[]          @relation("RatingsFromDriver")
+  ratingsReceived  Rating[]          @relation("RatingsToDriver")
+  earnings         DriverEarning[]
+  notifications    Notification[]
+  priceOverrides   SubscriptionPriceOverride[]
+
+  @@index([currentLat, currentLng])
+  @@index([city, isOnline, isAvailable])
+}
+
+model Ride {
+  id                  String        @id @default(cuid())
+  userId              String
+  driverId            String?
+  pickupLat           Float
+  pickupLng           Float
+  pickupAddress       String
+  dropLat             Float
+  dropLng             Float
+  dropAddress         String
+  status              RideStatus    @default(SEARCHING)
+  vehicleType         VehicleType
+  estimatedFare       Decimal       @db.Decimal(10, 2)
+  actualFare          Decimal?      @db.Decimal(10, 2)
+  distance            Decimal?      @db.Decimal(10, 3)
+  duration            Int?
+  paymentMethod       PaymentMethod
+  paymentStatus       PaymentStatus @default(PENDING)
+  razorpayOrderId     String?
+  razorpayPaymentId   String?
+  otp                 String        @db.Char(4)
+  otpVerified         Boolean       @default(false)
+  cancelledBy         String?
+  cancellationReason  String?
+  scheduledAt         DateTime?
+  rejectionCount      Int           @default(0)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  user             User     @relation("UserRides", fields: [userId], references: [id])
+  driver           Driver?  @relation("DriverRides", fields: [driverId], references: [id])
+  ratingByUser     Rating?  @relation("RideUserRating")
+  ratingByDriver   Rating?  @relation("RideDriverRating")
+
+  @@index([userId])
+  @@index([driverId])
+  @@index([status])
+}
+
+model SubscriptionPlan {
+  id                 String       @id @default(cuid())
+  name               String
+  description        String?
+  city               String
+  zone               String?
+  vehicleType        VehicleType?
+  billingCycle       BillingCycle
+  basePrice          Decimal      @db.Decimal(10, 2)
+  peakHoursDiscount  Decimal      @default(0) @db.Decimal(5, 4)
+  offPeakDiscount    Decimal      @default(0) @db.Decimal(5, 4)
+  peakHoursStart     String       @default("06:00")
+  peakHoursEnd       String       @default("10:00")
+  isActive           Boolean      @default(true)
+  validFrom          DateTime     @default(now())
+  validUntil         DateTime?
+  createdById        String
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  createdBy          AdminUser    @relation(fields: [createdById], references: [id])
+  subscriptions      DriverSubscription[]
+  priceOverrides     SubscriptionPriceOverride[]
+  priceSchedules     SubscriptionPriceSchedule[]
+  priceAudit         SubscriptionPriceAudit[]
+}
+
+model DriverSubscription {
+  id                    String             @id @default(cuid())
+  driverId              String
+  planId                String
+  startDate             DateTime
+  endDate               DateTime
+  amountPaid            Decimal            @db.Decimal(10, 2)
+  status                SubscriptionStatus @default(ACTIVE)
+  razorpaySubscriptionId String?
+  autoRenew             Boolean            @default(true)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  driver   Driver           @relation(fields: [driverId], references: [id])
+  plan     SubscriptionPlan @relation(fields: [planId], references: [id])
+  invoice  SubscriptionInvoice?
+
+  @@index([driverId, status])
+}
+
+model SubscriptionPriceOverride {
+  id          String   @id @default(cuid())
+  driverId    String
+  planId      String
+  customPrice Decimal  @db.Decimal(10, 2)
+  reason      String
+  adminNote   String?
+  validUntil  DateTime
+  createdById String
+  createdAt   DateTime @default(now())
+
+  driver      Driver           @relation(fields: [driverId], references: [id])
+  plan        SubscriptionPlan @relation(fields: [planId], references: [id])
+  createdBy   AdminUser        @relation(fields: [createdById], references: [id])
+}
+
+model SubscriptionPriceSchedule {
+  id          String    @id @default(cuid())
+  planId      String
+  newPrice    Decimal   @db.Decimal(10, 2)
+  effectiveFrom DateTime
+  appliedAt   DateTime?
+  createdById String
+  createdAt   DateTime  @default(now())
+
+  plan        SubscriptionPlan @relation(fields: [planId], references: [id])
+  createdBy   AdminUser        @relation(fields: [createdById], references: [id])
+}
+
+model SubscriptionPriceAudit {
+  id         String   @id @default(cuid())
+  planId     String
+  oldPrice   Decimal  @db.Decimal(10, 2)
+  newPrice   Decimal  @db.Decimal(10, 2)
+  changedById String
+  changeType String
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  plan       SubscriptionPlan @relation(fields: [planId], references: [id])
+  changedBy  AdminUser        @relation(fields: [changedById], references: [id])
+}
+
+model SubscriptionCampaign {
+  id               String   @id @default(cuid())
+  name             String
+  discountPercent  Decimal  @db.Decimal(5, 2)
+  startDate        DateTime
+  endDate          DateTime
+  targetCities     String[]
+  targetVehicleTypes VehicleType[]
+  maxUses          Int?
+  usedCount        Int      @default(0)
+  isActive         Boolean  @default(true)
+  createdById      String
+  createdAt        DateTime @default(now())
+
+  createdBy        AdminUser @relation(fields: [createdById], references: [id])
+}
+
+model SubscriptionInvoice {
+  id             String   @id @default(cuid())
+  subscriptionId String   @unique
+  invoiceNumber  String   @unique
+  driverGstNo    String?
+  subtotal       Decimal  @db.Decimal(10, 2)
+  gstAmount      Decimal  @db.Decimal(10, 2)
+  totalAmount    Decimal  @db.Decimal(10, 2)
+  pdfUrl         String?
+  createdAt      DateTime @default(now())
+
+  subscription   DriverSubscription @relation(fields: [subscriptionId], references: [id])
+}
+
+model FarePricingRule {
+  id               String      @id @default(cuid())
+  city             String
+  vehicleType      VehicleType
+  baseFare         Decimal     @db.Decimal(10, 2)
+  perKmRate        Decimal     @db.Decimal(10, 2)
+  perMinRate       Decimal     @db.Decimal(10, 2)
+  minimumFare      Decimal     @db.Decimal(10, 2)
+  surgeMultiplier  Decimal     @default(1.0) @db.Decimal(5, 2)
+  surgeRevertAt    DateTime?
+  isActive         Boolean     @default(true)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@unique([city, vehicleType])
+}
+
+model Rating {
+  id           String   @id @default(cuid())
+  rideId       String
+  fromUserId   String?
+  fromDriverId String?
+  toUserId     String?
+  toDriverId   String?
+  score        Int
+  comment      String?
+  createdAt    DateTime @default(now())
+
+  ride         Ride    @relation("RideUserRating", fields: [rideId], references: [id], map: "Rating_rideId_user_fkey")
+  rideDriver   Ride?   @relation("RideDriverRating", fields: [rideId], references: [id], map: "Rating_rideId_driver_fkey")
+  fromUser     User?   @relation("RatingsFromUser", fields: [fromUserId], references: [id])
+  toUser       User?   @relation("RatingsToUser", fields: [toUserId], references: [id])
+  fromDriver   Driver? @relation("RatingsFromDriver", fields: [fromDriverId], references: [id])
+  toDriver     Driver? @relation("RatingsToDriver", fields: [toDriverId], references: [id])
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         AdminRole @default(SUPPORT)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  subscriptionPlans     SubscriptionPlan[]
+  priceOverrides        SubscriptionPriceOverride[]
+  priceSchedules        SubscriptionPriceSchedule[]
+  priceAudits           SubscriptionPriceAudit[]
+  campaigns             SubscriptionCampaign[]
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?
+  driverId  String?
+  type      String
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean  @default(false)
+  sentAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  user   User?   @relation(fields: [userId], references: [id])
+  driver Driver? @relation(fields: [driverId], references: [id])
+}
+
+model SavedAddress {
+  id        String   @id @default(cuid())
+  userId    String
+  label     String
+  address   String
+  lat       Float
+  lng       Float
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model DriverEarning {
+  id        String   @id @default(cuid())
+  driverId  String
+  rideId    String?
+  amount    Decimal  @db.Decimal(10, 2)
+  type      String
+  createdAt DateTime @default(now())
+
+  driver    Driver   @relation(fields: [driverId], references: [id])
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Decimal  @db.Decimal(10, 2)
+  type        String
+  description String?
+  razorpayPaymentId String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String?
+  driverId  String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}

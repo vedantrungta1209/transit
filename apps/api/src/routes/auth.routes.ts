@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { sendUserOtp, verifyUserOtp, sendDriverOtp, verifyDriverOtp, adminLogin, refreshToken, logout } from '../controllers/auth.controller';
+const r = Router();
+r.post('/user/send-otp', sendUserOtp);
+r.post('/user/verify-otp', verifyUserOtp);
+r.post('/driver/send-otp', sendDriverOtp);
+r.post('/driver/verify-otp', verifyDriverOtp);
+r.post('/admin/login', adminLogin);
+r.post('/refresh', refreshToken);
+r.post('/logout', logout);
+export default r;

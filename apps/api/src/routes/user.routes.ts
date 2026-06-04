@@ -1,0 +1,13 @@
+import { Router } from 'express';
+import { authenticateUser } from '../middleware/auth';
+import { getProfile, updateProfile, getSavedAddresses, saveAddress, deleteAddress, getWallet, topUpWallet, rateDriver } from '../controllers/user.controller';
+const r = Router();
+r.get('/me', authenticateUser, getProfile);
+r.patch('/me', authenticateUser, updateProfile);
+r.get('/me/addresses', authenticateUser, getSavedAddresses);
+r.post('/me/addresses', authenticateUser, saveAddress);
+r.delete('/me/addresses/:id', authenticateUser, deleteAddress);
+r.get('/me/wallet', authenticateUser, getWallet);
+r.post('/me/wallet/topup', authenticateUser, topUpWallet);
+r.post('/me/ratings', authenticateUser, rateDriver);
+export default r;

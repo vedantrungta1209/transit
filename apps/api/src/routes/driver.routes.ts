@@ -1,0 +1,16 @@
+import { Router } from 'express';
+import { authenticateDriver } from '../middleware/auth';
+import { registerDriver, getMyProfile, updateProfile, updateLocation, setOnlineStatus, getEarnings, getSubscription, subscribe, confirmSubscription, uploadKycDocuments, kycUpload } from '../controllers/driver.controller';
+const r = Router();
+r.post('/register', registerDriver);
+r.get('/me', authenticateDriver, getMyProfile);
+r.patch('/me', authenticateDriver, updateProfile);
+r.patch('/me/location', authenticateDriver, updateLocation);
+r.patch('/me/online', authenticateDriver, setOnlineStatus);
+r.get('/me/earnings', authenticateDriver, getEarnings);
+r.get('/me/subscription', authenticateDriver, getSubscription);
+r.post('/me/subscription', authenticateDriver, subscribe);
+r.post('/me/subscription/confirm', authenticateDriver, confirmSubscription);
+r.get('/me/kyc', authenticateDriver, getMyProfile);
+r.post('/me/kyc/documents', authenticateDriver, kycUpload, uploadKycDocuments);
+export default r;

@@ -1,0 +1,6 @@
+{
+  "home": "Home", "earnings": "Earnings", "subscription": "Subscription", "profile": "Profile",
+  "online": "Online", "offline": "Offline", "accept": "Accept", "decline": "Decline",
+  "rideRequest": "New Ride Request", "verifyOtp": "Verify OTP", "completeRide": "Complete Ride",
+  "subscribeNow": "Subscribe Now", "logout": "Logout"
+}

@@ -1,0 +1,14 @@
+import { Router } from 'express';
+import { authenticateUser, authenticateDriver } from '../middleware/auth';
+import { estimateFare, createRide, acceptRide, arriveAtPickup, startRide, completeRide, cancelRide, getRide, getRideHistory } from '../controllers/ride.controller';
+const r = Router();
+r.post('/estimate', estimateFare);
+r.post('/', authenticateUser, createRide);
+r.get('/history', authenticateUser, getRideHistory);
+r.get('/:id', getRide);
+r.patch('/:id/accept', authenticateDriver, acceptRide);
+r.patch('/:id/arrive', authenticateDriver, arriveAtPickup);
+r.patch('/:id/start', authenticateDriver, startRide);
+r.patch('/:id/complete', authenticateDriver, completeRide);
+r.patch('/:id/cancel', cancelRide);
+export default r;

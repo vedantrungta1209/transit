@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Transit Driver",
+    "slug": "transit-driver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": { "image": "./assets/splash.png", "resizeMode": "contain", "backgroundColor": "#0284c7" },
+    "ios": { "bundleIdentifier": "in.transitco.driver", "supportsTablet": false },
+    "android": {
+      "package": "in.transitco.driver",
+      "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#0284c7" },
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_BACKGROUND_LOCATION", "VIBRATE"]
+    },
+    "plugins": [
+      "expo-router",
+      ["expo-location", { "locationAlwaysAndWhenInUsePermission": "Transit needs your location to match you with nearby riders." }],
+      ["expo-notifications", { "color": "#0284c7" }]
+    ],
+    "scheme": "transit-driver"
+  }
+}

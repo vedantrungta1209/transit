@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Transit",
+    "slug": "transit-customer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": { "image": "./assets/splash.png", "resizeMode": "contain", "backgroundColor": "#0284c7" },
+    "ios": { "bundleIdentifier": "in.transitco.customer", "supportsTablet": false },
+    "android": {
+      "package": "in.transitco.customer",
+      "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#0284c7" },
+      "permissions": ["ACCESS_FINE_LOCATION", "VIBRATE"]
+    },
+    "plugins": [
+      "expo-router",
+      ["expo-location", { "locationWhenInUsePermission": "Transit needs your location to find rides nearby." }],
+      ["expo-notifications", { "color": "#0284c7" }]
+    ],
+    "scheme": "transit"
+  }
+}

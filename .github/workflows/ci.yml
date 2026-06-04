@@ -36,7 +36,7 @@ jobs:
 
       - run: npm install
       - run: npx prisma generate
-      - run: npx prisma migrate deploy
+      - run: npx prisma db push --force-reset
         env:
           DATABASE_URL: postgresql://transit:transit@localhost:5432/transit_test
 

@@ -1,13 +1,19 @@
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
-const rzp = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+let _rzp: Razorpay | null = null;
+function getRzp(): Razorpay {
+  if (!_rzp) {
+    _rzp = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+      key_secret: process.env.RAZORPAY_KEY_SECRET || 'placeholder',
+    });
+  }
+  return _rzp;
+}
 
 export async function createOrder(amount: number, receipt: string) {
-  return rzp.orders.create({ amount: Math.round(amount * 100), currency: 'INR', receipt });
+  return getRzp().orders.create({ amount: Math.round(amount * 100), currency: 'INR', receipt });
 }
 
 export function verifyPaymentSignature(orderId: string, paymentId: string, signature: string): boolean {
@@ -28,7 +34,7 @@ export function verifyWebhookSignature(rawBody: string, signature: string): bool
 }
 
 export async function createSubscription(planId: string, totalCount: number, customerId?: string) {
-  return rzp.subscriptions.create({
+  return getRzp().subscriptions.create({
     plan_id: planId,
     total_count: totalCount,
     customer_notify: 1,
@@ -37,7 +43,7 @@ export async function createSubscription(planId: string, totalCount: number, cus
 }
 
 export async function cancelSubscription(subscriptionId: string) {
-  return rzp.subscriptions.cancel(subscriptionId);
+  return getRzp().subscriptions.cancel(subscriptionId);
 }
 
 export async function createContact(name: string, phone: string) {

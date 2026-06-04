@@ -18,9 +18,18 @@ export default function Layout() {
   return (
     <div className="flex h-screen bg-gray-50">
       <aside className="w-64 bg-white border-r flex flex-col">
-        <div className="p-6 border-b">
-          <h1 className="text-xl font-bold text-brand-600">Transit Admin</h1>
-          <p className="text-sm text-gray-500 mt-1">{admin?.name}</p>
+        <div className="px-5 py-4 border-b flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-sky-600 flex items-center justify-center flex-shrink-0">
+            <svg width="20" height="20" viewBox="0 0 48 48" fill="none">
+              <path d="M10 24 C10 16 16 10 24 10" stroke="white" strokeWidth="4" strokeLinecap="round"/>
+              <path d="M10 24 C10 32 16 38 24 38" stroke="white" strokeWidth="4" strokeLinecap="round"/>
+              <path d="M18 17 L30 24 L18 31" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-base font-bold text-gray-900 leading-tight">Transit</h1>
+            <p className="text-xs text-gray-400 leading-tight">{admin?.name || 'Admin'}</p>
+          </div>
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {nav.map(({ to, icon: Icon, label }) => (

@@ -31,7 +31,6 @@
           "apiKey": "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
         }
       },
-      "googleServicesFile": "./google-services.json"
     },
     "plugins": [
       "expo-router",
@@ -39,12 +38,6 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Transit needs your location to find rides nearby."
-        }
-      ],
-      [
-        "expo-notifications",
-        {
-          "color": "#0F2B5B"
         }
       ]
     ],

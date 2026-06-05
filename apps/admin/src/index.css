@@ -2,7 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --t-navy:        #0F2B5B;
+  --t-ink:         #071633;
+  --t-amber:       #F7B32B;
+  --t-amber-deep:  #E8941A;
+  --t-paper:       #F4F1EA;
+  --t-line:        #E7E9EE;
+  --t-text-muted:  #5C6B86;
+  --t-success:     #1E9E6A;
+  --t-danger:      #DC4E37;
+  --t-shadow-1:    0 1px 2px rgba(15,43,91,0.06), 0 2px 8px rgba(15,43,91,0.06);
+  --t-shadow-2:    0 8px 24px rgba(15,43,91,0.10);
+}
+
 @layer base {
-  * { @apply border-gray-200; }
-  body { @apply bg-gray-50 text-gray-900 font-sans; }
+  * { @apply border-[#E7E9EE]; }
+  body { @apply bg-paper text-navy font-sans; }
+  h1, h2, h3, h4 { @apply font-display; }
+}
+
+@layer utilities {
+  .shadow-t1 { box-shadow: var(--t-shadow-1); }
+  .shadow-t2 { box-shadow: var(--t-shadow-2); }
 }

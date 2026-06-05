@@ -4,6 +4,10 @@ build/
 .turbo/
 .env
 .env.local
+apps/api/.env
+infra/certbot/
+!.env.example
+!apps/api/.env.example
 *.log
 coverage/
 .expo/

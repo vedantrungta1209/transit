@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
+import Svg, { Path } from 'react-native-svg';
 import { api } from '../../src/lib/api';
 import { useAuthStore } from '../../src/stores/auth';
+import { T } from '../../src/lib/theme';
 
 export default function RegisterScreen() {
   const { phone } = useLocalSearchParams<{ phone: string }>();
@@ -16,7 +19,7 @@ export default function RegisterScreen() {
 
   async function handleRegister() {
     if (!form.name || !form.vehicleNumber || !form.licenceNumber) {
-      return Alert.alert('Please fill all required fields');
+      return Alert.alert('Required fields', 'Please fill name, vehicle number, and licence number.');
     }
     setLoading(true);
     try {
@@ -25,42 +28,95 @@ export default function RegisterScreen() {
       router.replace('/auth/kyc');
     } catch (e: any) {
       Alert.alert('Error', e.response?.data?.error || 'Registration failed');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
-  const field = (label: string, key: keyof typeof form, opts?: any) => (
-    <View className="mb-4">
-      <Text className="text-sm text-gray-600 mb-1">{label}</Text>
-      <TextInput
-        value={form[key]} onChangeText={v => setForm({ ...form, [key]: v })}
-        className="border border-gray-200 rounded-xl px-4 py-3 text-base bg-gray-50"
-        {...opts}
-      />
-    </View>
-  );
+  function Field({ label, field, opts }: { label: string; field: keyof typeof form; opts?: any }) {
+    return (
+      <View style={s.fieldGroup}>
+        <Text style={s.fieldLabel}>{label}</Text>
+        <TextInput
+          value={form[field]}
+          onChangeText={v => setForm({ ...form, [field]: v })}
+          style={s.fieldInput}
+          placeholderTextColor={T.TEXT_FAINT}
+          {...opts}
+        />
+      </View>
+    );
+  }
 
   return (
-    <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 24 }}>
-      <Text className="text-2xl font-bold text-gray-900 mb-6">Create Driver Account</Text>
-      {field('Full Name *', 'name')}
-      {field('Vehicle Number *', 'vehicleNumber', { autoCapitalize: 'characters' })}
-      {field('Vehicle Model', 'vehicleModel', { placeholder: 'e.g. Maruti Swift' })}
-      {field('Vehicle Year', 'vehicleYear', { keyboardType: 'number-pad' })}
-      {field('Licence Number *', 'licenceNumber', { autoCapitalize: 'characters' })}
-      {field('Aadhaar Number (last 4 will be stored)', 'aadhaarNumber', { keyboardType: 'number-pad', maxLength: 12 })}
-      <View className="mb-4">
-        <Text className="text-sm text-gray-600 mb-1">Vehicle Type</Text>
-        <View className="border border-gray-200 rounded-xl bg-gray-50 overflow-hidden">
-          <Picker selectedValue={form.vehicleType} onValueChange={v => setForm({ ...form, vehicleType: v })}>
-            {['AUTO', 'CAB', 'EV_CAB', 'BIKE'].map(t => <Picker.Item key={t} label={t} value={t} />)}
-          </Picker>
+    <SafeAreaView style={{ flex: 1, backgroundColor: T.PAPER }}>
+      <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 50 }}>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+          <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+            <Path d="M15 18l-6-6 6-6" stroke={T.TEXT_MUTED} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+          </Svg>
+        </TouchableOpacity>
+
+        <Text style={s.title}>Create Driver Account</Text>
+        <Text style={s.subtitle}>+91 {phone}</Text>
+
+        <View style={s.card}>
+          <Field label="Full Name *" field="name" opts={{ placeholder: 'As on your licence' }} />
+          <Field label="Vehicle Number *" field="vehicleNumber" opts={{ placeholder: 'e.g. KA01AB1234', autoCapitalize: 'characters' }} />
+          <Field label="Vehicle Model" field="vehicleModel" opts={{ placeholder: 'e.g. Maruti Swift' }} />
+          <Field label="Vehicle Year" field="vehicleYear" opts={{ placeholder: '2020', keyboardType: 'number-pad' }} />
+          <Field label="Licence Number *" field="licenceNumber" opts={{ autoCapitalize: 'characters' }} />
+          <Field label="Aadhaar Number" field="aadhaarNumber" opts={{ placeholder: '12-digit number', keyboardType: 'number-pad', maxLength: 12 }} />
+
+          <Text style={s.fieldLabel}>Vehicle Type</Text>
+          <View style={[s.fieldInput, { padding: 0, marginBottom: 0 }]}>
+            <Picker
+              selectedValue={form.vehicleType}
+              onValueChange={v => setForm({ ...form, vehicleType: v })}
+              style={{ color: T.TEXT }}
+              dropdownIconColor={T.TEXT_MUTED}
+            >
+              {[['AUTO', '🛺 Auto'], ['CAB', '🚗 Cab'], ['EV_CAB', '⚡ EV Cab'], ['BIKE', '🏍 Bike']].map(([v, l]) => (
+                <Picker.Item key={v} label={l} value={v} />
+              ))}
+            </Picker>
+          </View>
         </View>
-      </View>
-      <TouchableOpacity onPress={handleRegister} disabled={loading} className="bg-blue-600 rounded-xl py-4 items-center mt-4">
-        <Text className="text-white font-semibold text-base">{loading ? 'Registering...' : 'Create Account'}</Text>
-      </TouchableOpacity>
-    </ScrollView>
+
+        <TouchableOpacity
+          onPress={handleRegister}
+          disabled={loading}
+          style={[s.ctaBtn, loading && { opacity: 0.5 }]}
+        >
+          <Text style={s.ctaBtnText}>{loading ? 'Creating Account…' : 'Create Account'}</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const s = StyleSheet.create({
+  backBtn: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: T.SURFACE, borderWidth: 1, borderColor: T.LINE,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 20,
+    ...T.SHADOW_SM,
+  },
+  title: { fontSize: 24, fontWeight: '700', color: T.TEXT, letterSpacing: -0.4, marginBottom: 4 },
+  subtitle: { fontSize: 14, color: T.TEXT_MUTED, marginBottom: 24 },
+  card: {
+    backgroundColor: T.SURFACE, borderRadius: T.R_LG,
+    padding: 20, marginBottom: 20,
+    borderWidth: 1, borderColor: T.LINE, ...T.SHADOW_SM,
+  },
+  fieldGroup: { marginBottom: 16 },
+  fieldLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 0.8, color: T.TEXT_FAINT, textTransform: 'uppercase', marginBottom: 6 },
+  fieldInput: {
+    borderWidth: 1.5, borderColor: T.LINE, borderRadius: T.R_SM,
+    backgroundColor: T.SURFACE_2, paddingHorizontal: 14, paddingVertical: 12,
+    fontSize: 15, color: T.TEXT,
+  },
+  ctaBtn: {
+    height: 56, backgroundColor: T.AMBER, borderRadius: T.R_MD,
+    alignItems: 'center', justifyContent: 'center', ...T.SHADOW_AMBER,
+  },
+  ctaBtnText: { fontSize: 17, fontWeight: '600', color: T.ON_AMBER },
+});

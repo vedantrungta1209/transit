@@ -4,7 +4,7 @@
 set -euo pipefail
 
 EMAIL="vedantrungta@gmail.com"
-DOMAINS=("api.transitco.in" "admin.transitco.in")
+DOMAINS=("transit-api.transitco.in" "admin.transitco.in")
 
 cd "$(dirname "$0")/.."
 

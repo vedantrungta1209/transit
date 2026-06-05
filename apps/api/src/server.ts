@@ -20,8 +20,6 @@ const io = new Server(server, {
 setIo(io);
 
 async function start() {
-  await pubClient.connect();
-  await subClient.connect();
   io.adapter(createAdapter(pubClient, subClient));
   setupSocketHandlers(io);
   startSubscriptionCron();

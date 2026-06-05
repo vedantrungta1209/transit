@@ -10,6 +10,7 @@ COPY apps/api/ ./apps/api/
 RUN cd apps/api && npx prisma generate && npx tsc
 
 FROM node:20-alpine AS runner
+RUN apk add --no-cache openssl
 WORKDIR /app
 ENV NODE_ENV=production
 

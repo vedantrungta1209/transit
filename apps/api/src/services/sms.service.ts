@@ -7,15 +7,19 @@ const EXOTEL_SENDER = process.env.EXOTEL_SENDER_ID || 'TRNST';
 const BASE_URL = `https://api.exotel.com/v1/Accounts/${EXOTEL_SID}`;
 
 async function sendSms(to: string, body: string): Promise<void> {
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production' || !EXOTEL_SID || EXOTEL_SID === 'FILL_ME') {
     console.log(`[SMS] To: ${to} | Message: ${body}`);
     return;
   }
-  await axios.post(
-    `${BASE_URL}/Sms/send`,
-    new URLSearchParams({ From: EXOTEL_SENDER, To: to, Body: body }),
-    { auth: { username: EXOTEL_API_KEY, password: EXOTEL_API_TOKEN } }
-  );
+  try {
+    await axios.post(
+      `${BASE_URL}/Sms/send`,
+      new URLSearchParams({ From: EXOTEL_SENDER, To: to, Body: body }),
+      { auth: { username: EXOTEL_API_KEY, password: EXOTEL_API_TOKEN } }
+    );
+  } catch (err) {
+    console.error('[SMS] Exotel send failed:', (err as Error).message);
+  }
 }
 
 export async function sendOtp(phone: string, otp: string): Promise<void> {

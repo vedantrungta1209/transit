@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.transitco.in';
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://transit-api.transitco.in';
 
 export const api = axios.create({ baseURL: `${API_URL}/api`, timeout: 15000 });
 

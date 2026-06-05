@@ -22,4 +22,4 @@ COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 
 WORKDIR /app/apps/api
 EXPOSE 3000
-CMD npx prisma migrate deploy && node dist/server.js
+CMD npx prisma migrate deploy && node dist/apps/api/src/server.js

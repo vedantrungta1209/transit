@@ -5,18 +5,52 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "splash": { "image": "./assets/splash.png", "resizeMode": "contain", "backgroundColor": "#0284c7" },
-    "ios": { "bundleIdentifier": "in.transitco.customer", "supportsTablet": false },
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F2B5B"
+    },
+    "ios": {
+      "bundleIdentifier": "in.transitco.customer",
+      "supportsTablet": false
+    },
     "android": {
       "package": "in.transitco.customer",
-      "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#0284c7" },
-      "permissions": ["ACCESS_FINE_LOCATION", "VIBRATE"]
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F2B5B"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "VIBRATE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "plugins": [
       "expo-router",
-      ["expo-location", { "locationWhenInUsePermission": "Transit needs your location to find rides nearby." }],
-      ["expo-notifications", { "color": "#0284c7" }]
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Transit needs your location to find rides nearby."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0F2B5B"
+        }
+      ]
     ],
-    "scheme": "transit"
+    "scheme": "transit",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "1629b745-bb59-454b-9136-811d8849ce47"
+      }
+    },
+    "owner": "transit-ved"
   }
 }

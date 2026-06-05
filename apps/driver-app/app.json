@@ -5,18 +5,53 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "splash": { "image": "./assets/splash.png", "resizeMode": "contain", "backgroundColor": "#0284c7" },
-    "ios": { "bundleIdentifier": "in.transitco.driver", "supportsTablet": false },
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F2B5B"
+    },
+    "ios": {
+      "bundleIdentifier": "in.transitco.driver",
+      "supportsTablet": false
+    },
     "android": {
       "package": "in.transitco.driver",
-      "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#0284c7" },
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_BACKGROUND_LOCATION", "VIBRATE"]
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F2B5B"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "VIBRATE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "plugins": [
       "expo-router",
-      ["expo-location", { "locationAlwaysAndWhenInUsePermission": "Transit needs your location to match you with nearby riders." }],
-      ["expo-notifications", { "color": "#0284c7" }]
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Transit needs your location to match you with nearby riders."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0F2B5B"
+        }
+      ]
     ],
-    "scheme": "transit-driver"
+    "scheme": "transit-driver",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "274a2c6f-50ca-42bf-b398-1c6f88ffd878"
+      }
+    },
+    "owner": "transit-ved"
   }
 }

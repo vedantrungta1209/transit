@@ -30,7 +30,7 @@
         "googleMaps": {
           "apiKey": "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
         }
-      },
+      }
     },
     "plugins": [
       "expo-router",
@@ -39,7 +39,8 @@
         {
           "locationWhenInUsePermission": "Transit needs your location to find rides nearby."
         }
-      ]
+      ],
+      "./plugins/withRazorpayMaven"
     ],
     "scheme": "transit",
     "extra": {

@@ -1,0 +1,380 @@
+workflows:
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Transit Customer — Android APK (for sideload / internal testing)
+  # Trigger: tag customer-preview-v*  OR  manual from Codemagic dashboard
+  # ─────────────────────────────────────────────────────────────────────────────
+  transit-customer-android-apk:
+    name: Transit Customer — Android APK
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      android_signing:
+        - transit_customer_keystore
+      groups:
+        - transit_android          # must contain EXPO_TOKEN
+      vars:
+        EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
+        EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
+        EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
+      node: 20.17.0
+      java: 17
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'customer-preview-v*'
+          include: true
+
+    scripts:
+      - name: Install dependencies
+        script: npm install
+
+      - name: Expo prebuild (Android)
+        script: |
+          cd apps/customer-app
+          npx expo prebuild --platform android --clean --non-interactive
+
+      - name: Configure release signing
+        script: |
+          cat > apps/customer-app/android/key.properties << EOF
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyPassword=$CM_KEY_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          storeFile=$CM_KEYSTORE_PATH
+          EOF
+
+          python3 << 'PYEOF'
+          with open('apps/customer-app/android/app/build.gradle', 'r') as f:
+              content = f.read()
+
+          loader = (
+              '\ndef keystorePropertiesFile = rootProject.file("key.properties")\n'
+              'def keystoreProperties = new Properties()\n'
+              'keystoreProperties.load(new FileInputStream(keystorePropertiesFile))\n\n'
+          )
+
+          content = content.replace(
+              '    signingConfigs {\n        debug {',
+              loader + '    signingConfigs {\n'
+              '        release {\n'
+              "            storeFile file(keystoreProperties['storeFile'])\n"
+              "            storePassword keystoreProperties['storePassword']\n"
+              "            keyAlias keystoreProperties['keyAlias']\n"
+              "            keyPassword keystoreProperties['keyPassword']\n"
+              '        }\n'
+              '        debug {'
+          ).replace(
+              '            // Caution! In production, you need to generate your own keystore file.\n'
+              '            // see https://reactnative.dev/docs/signed-apk-android.\n'
+              '            signingConfig signingConfigs.debug',
+              '            signingConfig signingConfigs.release'
+          )
+
+          with open('apps/customer-app/android/app/build.gradle', 'w') as f:
+              f.write(content)
+          print('✅ Release signing config patched')
+          PYEOF
+
+      - name: Set version code
+        script: |
+          cd apps/customer-app/android
+          sed -i "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
+
+      - name: Build APK
+        script: |
+          cd apps/customer-app/android
+          ./gradlew assembleRelease
+
+    artifacts:
+      - apps/customer-app/android/app/build/outputs/apk/release/*.apk
+      - apps/customer-app/android/app/build/outputs/**/mapping.txt
+
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Transit Driver — Android APK (for sideload / internal testing)
+  # Trigger: tag driver-preview-v*  OR  manual from Codemagic dashboard
+  # ─────────────────────────────────────────────────────────────────────────────
+  transit-driver-android-apk:
+    name: Transit Driver — Android APK
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      android_signing:
+        - transit_driver_keystore
+      groups:
+        - transit_android
+      vars:
+        EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
+        EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
+      node: 20.17.0
+      java: 17
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'driver-preview-v*'
+          include: true
+
+    scripts:
+      - name: Install dependencies
+        script: npm install
+
+      - name: Expo prebuild (Android)
+        script: |
+          cd apps/driver-app
+          npx expo prebuild --platform android --clean --non-interactive
+
+      - name: Configure release signing
+        script: |
+          cat > apps/driver-app/android/key.properties << EOF
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyPassword=$CM_KEY_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          storeFile=$CM_KEYSTORE_PATH
+          EOF
+
+          python3 << 'PYEOF'
+          with open('apps/driver-app/android/app/build.gradle', 'r') as f:
+              content = f.read()
+
+          loader = (
+              '\ndef keystorePropertiesFile = rootProject.file("key.properties")\n'
+              'def keystoreProperties = new Properties()\n'
+              'keystoreProperties.load(new FileInputStream(keystorePropertiesFile))\n\n'
+          )
+
+          content = content.replace(
+              '    signingConfigs {\n        debug {',
+              loader + '    signingConfigs {\n'
+              '        release {\n'
+              "            storeFile file(keystoreProperties['storeFile'])\n"
+              "            storePassword keystoreProperties['storePassword']\n"
+              "            keyAlias keystoreProperties['keyAlias']\n"
+              "            keyPassword keystoreProperties['keyPassword']\n"
+              '        }\n'
+              '        debug {'
+          ).replace(
+              '            // Caution! In production, you need to generate your own keystore file.\n'
+              '            // see https://reactnative.dev/docs/signed-apk-android.\n'
+              '            signingConfig signingConfigs.debug',
+              '            signingConfig signingConfigs.release'
+          )
+
+          with open('apps/driver-app/android/app/build.gradle', 'w') as f:
+              f.write(content)
+          print('✅ Release signing config patched')
+          PYEOF
+
+      - name: Set version code
+        script: |
+          cd apps/driver-app/android
+          sed -i "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
+
+      - name: Build APK
+        script: |
+          cd apps/driver-app/android
+          ./gradlew assembleRelease
+
+    artifacts:
+      - apps/driver-app/android/app/build/outputs/apk/release/*.apk
+      - apps/driver-app/android/app/build/outputs/**/mapping.txt
+
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Transit Customer — Android AAB (Play Store)
+  # Trigger: tag customer-v*
+  # ─────────────────────────────────────────────────────────────────────────────
+  transit-customer-android-prod:
+    name: Transit Customer — Android AAB (Play Store)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      android_signing:
+        - transit_customer_keystore
+      groups:
+        - transit_android
+      vars:
+        EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
+        EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
+        EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
+      node: 20.17.0
+      java: 17
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'customer-v*'
+          include: true
+        exclude_patterns:
+          - pattern: 'customer-preview-v*'
+
+    scripts:
+      - name: Install dependencies
+        script: npm install
+
+      - name: Expo prebuild (Android)
+        script: |
+          cd apps/customer-app
+          npx expo prebuild --platform android --clean --non-interactive
+
+      - name: Configure release signing
+        script: |
+          cat > apps/customer-app/android/key.properties << EOF
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyPassword=$CM_KEY_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          storeFile=$CM_KEYSTORE_PATH
+          EOF
+
+          python3 << 'PYEOF'
+          with open('apps/customer-app/android/app/build.gradle', 'r') as f:
+              content = f.read()
+
+          loader = (
+              '\ndef keystorePropertiesFile = rootProject.file("key.properties")\n'
+              'def keystoreProperties = new Properties()\n'
+              'keystoreProperties.load(new FileInputStream(keystorePropertiesFile))\n\n'
+          )
+
+          content = content.replace(
+              '    signingConfigs {\n        debug {',
+              loader + '    signingConfigs {\n'
+              '        release {\n'
+              "            storeFile file(keystoreProperties['storeFile'])\n"
+              "            storePassword keystoreProperties['storePassword']\n"
+              "            keyAlias keystoreProperties['keyAlias']\n"
+              "            keyPassword keystoreProperties['keyPassword']\n"
+              '        }\n'
+              '        debug {'
+          ).replace(
+              '            // Caution! In production, you need to generate your own keystore file.\n'
+              '            // see https://reactnative.dev/docs/signed-apk-android.\n'
+              '            signingConfig signingConfigs.debug',
+              '            signingConfig signingConfigs.release'
+          )
+
+          with open('apps/customer-app/android/app/build.gradle', 'w') as f:
+              f.write(content)
+          print('✅ Release signing config patched')
+          PYEOF
+
+      - name: Set version code and name from tag
+        script: |
+          TAG=${FCI_TAG:-$(git describe --tags --abbrev=0)}
+          VERSION=$(echo $TAG | sed 's/customer-v//')
+          cd apps/customer-app/android
+          sed -i "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
+
+      - name: Build AAB
+        script: |
+          cd apps/customer-app/android
+          ./gradlew bundleRelease
+
+    artifacts:
+      - apps/customer-app/android/app/build/outputs/bundle/release/*.aab
+      - apps/customer-app/android/app/build/outputs/**/mapping.txt
+
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Transit Driver — Android AAB (Play Store)
+  # Trigger: tag driver-v*
+  # ─────────────────────────────────────────────────────────────────────────────
+  transit-driver-android-prod:
+    name: Transit Driver — Android AAB (Play Store)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      android_signing:
+        - transit_driver_keystore
+      groups:
+        - transit_android
+      vars:
+        EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
+        EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
+      node: 20.17.0
+      java: 17
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'driver-v*'
+          include: true
+        exclude_patterns:
+          - pattern: 'driver-preview-v*'
+
+    scripts:
+      - name: Install dependencies
+        script: npm install
+
+      - name: Expo prebuild (Android)
+        script: |
+          cd apps/driver-app
+          npx expo prebuild --platform android --clean --non-interactive
+
+      - name: Configure release signing
+        script: |
+          cat > apps/driver-app/android/key.properties << EOF
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyPassword=$CM_KEY_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          storeFile=$CM_KEYSTORE_PATH
+          EOF
+
+          python3 << 'PYEOF'
+          with open('apps/driver-app/android/app/build.gradle', 'r') as f:
+              content = f.read()
+
+          loader = (
+              '\ndef keystorePropertiesFile = rootProject.file("key.properties")\n'
+              'def keystoreProperties = new Properties()\n'
+              'keystoreProperties.load(new FileInputStream(keystorePropertiesFile))\n\n'
+          )
+
+          content = content.replace(
+              '    signingConfigs {\n        debug {',
+              loader + '    signingConfigs {\n'
+              '        release {\n'
+              "            storeFile file(keystoreProperties['storeFile'])\n"
+              "            storePassword keystoreProperties['storePassword']\n"
+              "            keyAlias keystoreProperties['keyAlias']\n"
+              "            keyPassword keystoreProperties['keyPassword']\n"
+              '        }\n'
+              '        debug {'
+          ).replace(
+              '            // Caution! In production, you need to generate your own keystore file.\n'
+              '            // see https://reactnative.dev/docs/signed-apk-android.\n'
+              '            signingConfig signingConfigs.debug',
+              '            signingConfig signingConfigs.release'
+          )
+
+          with open('apps/driver-app/android/app/build.gradle', 'w') as f:
+              f.write(content)
+          print('✅ Release signing config patched')
+          PYEOF
+
+      - name: Set version code and name from tag
+        script: |
+          TAG=${FCI_TAG:-$(git describe --tags --abbrev=0)}
+          VERSION=$(echo $TAG | sed 's/driver-v//')
+          cd apps/driver-app/android
+          sed -i "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
+
+      - name: Build AAB
+        script: |
+          cd apps/driver-app/android
+          ./gradlew bundleRelease
+
+    artifacts:
+      - apps/driver-app/android/app/build/outputs/bundle/release/*.aab
+      - apps/driver-app/android/app/build/outputs/**/mapping.txt

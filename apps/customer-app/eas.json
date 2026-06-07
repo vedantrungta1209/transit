@@ -11,6 +11,11 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://transit-api.transitco.in",
+        "EXPO_PUBLIC_RAZORPAY_KEY": "rzp_live_Sygzq2mkLj0s0k",
+        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
       }
     },
     "production": {
@@ -19,7 +24,7 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://transit-api.transitco.in",
-        "EXPO_PUBLIC_RAZORPAY_KEY": "rzp_test_StYRvfo70jxrLO",
+        "EXPO_PUBLIC_RAZORPAY_KEY": "rzp_live_Sygzq2mkLj0s0k",
         "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
       }
     }

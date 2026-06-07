@@ -212,8 +212,8 @@ workflows:
       tag_patterns:
         - pattern: 'customer-v*'
           include: true
-        exclude_patterns:
-          - pattern: 'customer-preview-v*'
+        - pattern: 'customer-preview-v*'
+          include: false
 
     scripts:
       - name: Install dependencies
@@ -309,8 +309,8 @@ workflows:
       tag_patterns:
         - pattern: 'driver-v*'
           include: true
-        exclude_patterns:
-          - pattern: 'driver-preview-v*'
+        - pattern: 'driver-preview-v*'
+          include: false
 
     scripts:
       - name: Install dependencies

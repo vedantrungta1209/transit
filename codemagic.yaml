@@ -77,6 +77,24 @@ workflows:
           cd apps/customer-app/android
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
 
+      - name: Patch expo-modules-core Kotlin
+        script: |
+          python3 << 'PYEOF'
+          path = 'node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/permissions/PermissionsService.kt'
+          with open(path, 'r') as f:
+              content = f.read()
+          patched = content.replace(
+              'return requestedPermissions.contains(permission)',
+              'return requestedPermissions?.contains(permission) == true'
+          )
+          if patched != content:
+              with open(path, 'w') as f:
+                  f.write(patched)
+              print('✅ PermissionsService.kt null-safety patched')
+          else:
+              print('ℹ️ PermissionsService.kt already patched or pattern not found')
+          PYEOF
+
       - name: Build APK
         script: |
           export NODE_PATH="$PWD/node_modules:$PWD/apps/customer-app/node_modules"
@@ -163,6 +181,24 @@ workflows:
         script: |
           cd apps/driver-app/android
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
+
+      - name: Patch expo-modules-core Kotlin
+        script: |
+          python3 << 'PYEOF'
+          path = 'node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/permissions/PermissionsService.kt'
+          with open(path, 'r') as f:
+              content = f.read()
+          patched = content.replace(
+              'return requestedPermissions.contains(permission)',
+              'return requestedPermissions?.contains(permission) == true'
+          )
+          if patched != content:
+              with open(path, 'w') as f:
+                  f.write(patched)
+              print('✅ PermissionsService.kt null-safety patched')
+          else:
+              print('ℹ️ PermissionsService.kt already patched or pattern not found')
+          PYEOF
 
       - name: Build APK
         script: |
@@ -254,6 +290,24 @@ workflows:
           cd apps/customer-app/android
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
           sed -i '' "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
+
+      - name: Patch expo-modules-core Kotlin
+        script: |
+          python3 << 'PYEOF'
+          path = 'node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/permissions/PermissionsService.kt'
+          with open(path, 'r') as f:
+              content = f.read()
+          patched = content.replace(
+              'return requestedPermissions.contains(permission)',
+              'return requestedPermissions?.contains(permission) == true'
+          )
+          if patched != content:
+              with open(path, 'w') as f:
+                  f.write(patched)
+              print('✅ PermissionsService.kt null-safety patched')
+          else:
+              print('ℹ️ PermissionsService.kt already patched or pattern not found')
+          PYEOF
 
       - name: Build AAB
         script: |
@@ -347,6 +401,24 @@ workflows:
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
           sed -i '' "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
 
+      - name: Patch expo-modules-core Kotlin
+        script: |
+          python3 << 'PYEOF'
+          path = 'node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/permissions/PermissionsService.kt'
+          with open(path, 'r') as f:
+              content = f.read()
+          patched = content.replace(
+              'return requestedPermissions.contains(permission)',
+              'return requestedPermissions?.contains(permission) == true'
+          )
+          if patched != content:
+              with open(path, 'w') as f:
+                  f.write(patched)
+              print('✅ PermissionsService.kt null-safety patched')
+          else:
+              print('ℹ️ PermissionsService.kt already patched or pattern not found')
+          PYEOF
+
       - name: Build AAB
         script: |
           export NODE_PATH="$PWD/node_modules:$PWD/apps/driver-app/node_modules"
@@ -377,7 +449,7 @@ workflows:
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
         BUNDLE_ID: "in.transitco.customer"
       node: 20.17.0
-      xcode: latest
+      xcode: 16
       cocoapods: 1.15.2
 
     triggering:
@@ -398,10 +470,13 @@ workflows:
           cd apps/customer-app
           npx expo prebuild --platform ios --clean --non-interactive
 
-      - name: Patch Podfile
+      - name: Patch Podfile and react_native_pods.rb
         script: |
           perl -i -0pe 's/,\s*\n\s*:privacy_file_aggregation_enabled\s*=>[^\n]*//g' apps/customer-app/ios/Podfile
           python3 << 'PYEOF'
+          import glob
+
+          # 1. Add razorpay-pod from GitHub (CDN is unreachable on CI)
           with open('apps/customer-app/ios/Podfile', 'r') as f:
               content = f.read()
           if 'razorpay-pod' not in content:
@@ -413,6 +488,24 @@ workflows:
           with open('apps/customer-app/ios/Podfile', 'w') as f:
               f.write(content)
           print('✅ Podfile patched')
+
+          # 2. Fix React-jsinspector missing :modular_headers => true in react_native_pods.rb
+          # Without this, CocoaPods raises "Swift pod ExpoModulesCore depends upon
+          # React-jsinspector, which does not define modules"
+          old = "pod 'React-jsinspector', :path => \"#{prefix}/ReactCommon/jsinspector-modern\""
+          new = "pod 'React-jsinspector', :path => \"#{prefix}/ReactCommon/jsinspector-modern\", :modular_headers => true"
+          for rn_pods in glob.glob('**/react-native/scripts/react_native_pods.rb', recursive=True):
+              if 'node_modules' in rn_pods:
+                  with open(rn_pods, 'r') as f:
+                      c = f.read()
+                  if old in c:
+                      with open(rn_pods, 'w') as f:
+                          f.write(c.replace(old, new, 1))
+                      print(f'✅ {rn_pods} patched')
+                      break
+                  elif new in c:
+                      print(f'ℹ️ {rn_pods} already has modular_headers')
+                      break
           PYEOF
 
       - name: Fetch signing certificate and profile
@@ -489,7 +582,7 @@ workflows:
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
         BUNDLE_ID: "in.transitco.driver"
       node: 20.17.0
-      xcode: latest
+      xcode: 16
       cocoapods: 1.15.2
 
     triggering:
@@ -510,10 +603,13 @@ workflows:
           cd apps/driver-app
           npx expo prebuild --platform ios --clean --non-interactive
 
-      - name: Patch Podfile
+      - name: Patch Podfile and react_native_pods.rb
         script: |
           perl -i -0pe 's/,\s*\n\s*:privacy_file_aggregation_enabled\s*=>[^\n]*//g' apps/driver-app/ios/Podfile
           python3 << 'PYEOF'
+          import glob
+
+          # 1. Add razorpay-pod from GitHub (CDN is unreachable on CI)
           with open('apps/driver-app/ios/Podfile', 'r') as f:
               content = f.read()
           if 'razorpay-pod' not in content:
@@ -525,6 +621,22 @@ workflows:
           with open('apps/driver-app/ios/Podfile', 'w') as f:
               f.write(content)
           print('✅ Podfile patched')
+
+          # 2. Fix React-jsinspector missing :modular_headers => true in react_native_pods.rb
+          old = "pod 'React-jsinspector', :path => \"#{prefix}/ReactCommon/jsinspector-modern\""
+          new = "pod 'React-jsinspector', :path => \"#{prefix}/ReactCommon/jsinspector-modern\", :modular_headers => true"
+          for rn_pods in glob.glob('**/react-native/scripts/react_native_pods.rb', recursive=True):
+              if 'node_modules' in rn_pods:
+                  with open(rn_pods, 'r') as f:
+                      c = f.read()
+                  if old in c:
+                      with open(rn_pods, 'w') as f:
+                          f.write(c.replace(old, new, 1))
+                      print(f'✅ {rn_pods} patched')
+                      break
+                  elif new in c:
+                      print(f'ℹ️ {rn_pods} already has modular_headers')
+                      break
           PYEOF
 
       - name: Fetch signing certificate and profile

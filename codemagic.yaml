@@ -384,7 +384,7 @@ workflows:
         BUNDLE_ID: "in.transitco.customer"
       node: 20.17.0
       xcode: latest
-      cocoapods: default
+      cocoapods: 1.15.2
 
     triggering:
       events:
@@ -427,6 +427,7 @@ workflows:
       - name: Install CocoaPods
         script: |
           ls apps/customer-app/ios || { echo "ERROR: ios folder missing — prebuild may have failed"; exit 1; }
+          export NODE_PATH="$PWD/node_modules:$PWD/apps/customer-app/node_modules"
           cd apps/customer-app/ios
           pod install
 
@@ -475,7 +476,7 @@ workflows:
         BUNDLE_ID: "in.transitco.driver"
       node: 20.17.0
       xcode: latest
-      cocoapods: default
+      cocoapods: 1.15.2
 
     triggering:
       events:
@@ -517,6 +518,7 @@ workflows:
 
       - name: Install CocoaPods
         script: |
+          export NODE_PATH="$PWD/node_modules:$PWD/apps/driver-app/node_modules"
           cd apps/driver-app/ios
           pod install
 

@@ -541,7 +541,8 @@ workflows:
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
             --private-key @file:/tmp/asc_key.p8 \
-            --create
+            --create \
+            --save
           keychain initialize
           keychain add-certificates --certificate /tmp/cert.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
 
@@ -691,7 +692,8 @@ workflows:
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
             --private-key @file:/tmp/asc_key.p8 \
-            --create
+            --create \
+            --save
           keychain initialize
           keychain add-certificates --certificate /tmp/cert.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
 

@@ -374,9 +374,6 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: in.transitco.customer
       groups:
         - transit_ios
         - transit_android
@@ -384,6 +381,7 @@ workflows:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
+        BUNDLE_ID: "in.transitco.customer"
       node: 20.17.0
       xcode: latest
       cocoapods: default
@@ -405,6 +403,18 @@ workflows:
         script: |
           cd apps/customer-app
           npx expo prebuild --platform ios --clean --non-interactive
+
+      - name: Fetch signing certificate and profile
+        script: |
+          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --certificate-key @file:/tmp/asc_key.p8 \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --create
+          keychain initialize
+          keychain add-certificates
 
       - name: Detect Xcode workspace
         script: |
@@ -432,7 +442,6 @@ workflows:
 
       - name: Upload to TestFlight
         script: |
-          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
           app-store-connect publish \
             --path "$(find build/ios/ipa -name '*.ipa' | head -1)" \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
@@ -455,15 +464,13 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: in.transitco.driver
       groups:
         - transit_ios
         - transit_android
       vars:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
+        BUNDLE_ID: "in.transitco.driver"
       node: 20.17.0
       xcode: latest
       cocoapods: default
@@ -485,6 +492,18 @@ workflows:
         script: |
           cd apps/driver-app
           npx expo prebuild --platform ios --clean --non-interactive
+
+      - name: Fetch signing certificate and profile
+        script: |
+          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --certificate-key @file:/tmp/asc_key.p8 \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --create
+          keychain initialize
+          keychain add-certificates
 
       - name: Detect Xcode workspace
         script: |
@@ -512,7 +531,6 @@ workflows:
 
       - name: Upload to TestFlight
         script: |
-          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
           app-store-connect publish \
             --path "$(find build/ios/ipa -name '*.ipa' | head -1)" \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \

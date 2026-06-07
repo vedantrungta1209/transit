@@ -57,12 +57,15 @@ workflows:
               "            storePassword keystoreProperties['storePassword']\n"
               "            keyAlias keystoreProperties['keyAlias']\n"
               "            keyPassword keystoreProperties['keyPassword']\n"
-              '        }\n        debug {'
-          ).replace(
+              '        }\n        debug {',
+              1
+          )
+          content = content.replace(
               '            // Caution! In production, you need to generate your own keystore file.\n'
               '            // see https://reactnative.dev/docs/signed-apk-android.\n'
               '            signingConfig signingConfigs.debug',
-              '            signingConfig signingConfigs.release'
+              '            signingConfig signingConfigs.release',
+              1
           )
           with open('apps/customer-app/android/app/build.gradle', 'w') as f:
               f.write(content)
@@ -74,16 +77,11 @@ workflows:
           cd apps/customer-app/android
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
 
-      - name: Patch expo-modules-core
-        script: |
-          sed -i '' 's/from components\.release/afterEvaluate { from components.findByName("release") }/g' \
-            node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
-
       - name: Build APK
         script: |
           export NODE_PATH="$PWD/node_modules:$PWD/apps/customer-app/node_modules"
           cd apps/customer-app/android
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a,armeabi-v7a 2>&1
 
     artifacts:
       - apps/customer-app/android/app/build/outputs/apk/release/*.apk
@@ -106,6 +104,7 @@ workflows:
       vars:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
+        EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
       node: 20.17.0
       java: 17
 
@@ -145,12 +144,15 @@ workflows:
               "            storePassword keystoreProperties['storePassword']\n"
               "            keyAlias keystoreProperties['keyAlias']\n"
               "            keyPassword keystoreProperties['keyPassword']\n"
-              '        }\n        debug {'
-          ).replace(
+              '        }\n        debug {',
+              1
+          )
+          content = content.replace(
               '            // Caution! In production, you need to generate your own keystore file.\n'
               '            // see https://reactnative.dev/docs/signed-apk-android.\n'
               '            signingConfig signingConfigs.debug',
-              '            signingConfig signingConfigs.release'
+              '            signingConfig signingConfigs.release',
+              1
           )
           with open('apps/driver-app/android/app/build.gradle', 'w') as f:
               f.write(content)
@@ -162,16 +164,11 @@ workflows:
           cd apps/driver-app/android
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
 
-      - name: Patch expo-modules-core
-        script: |
-          sed -i '' 's/from components\.release/afterEvaluate { from components.findByName("release") }/g' \
-            node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
-
       - name: Build APK
         script: |
           export NODE_PATH="$PWD/node_modules:$PWD/apps/driver-app/node_modules"
           cd apps/driver-app/android
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a,armeabi-v7a 2>&1
 
     artifacts:
       - apps/driver-app/android/app/build/outputs/apk/release/*.apk
@@ -236,12 +233,15 @@ workflows:
               "            storePassword keystoreProperties['storePassword']\n"
               "            keyAlias keystoreProperties['keyAlias']\n"
               "            keyPassword keystoreProperties['keyPassword']\n"
-              '        }\n        debug {'
-          ).replace(
+              '        }\n        debug {',
+              1
+          )
+          content = content.replace(
               '            // Caution! In production, you need to generate your own keystore file.\n'
               '            // see https://reactnative.dev/docs/signed-apk-android.\n'
               '            signingConfig signingConfigs.debug',
-              '            signingConfig signingConfigs.release'
+              '            signingConfig signingConfigs.release',
+              1
           )
           with open('apps/customer-app/android/app/build.gradle', 'w') as f:
               f.write(content)
@@ -255,16 +255,11 @@ workflows:
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
           sed -i '' "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
 
-      - name: Patch expo-modules-core
-        script: |
-          sed -i '' 's/from components\.release/afterEvaluate { from components.findByName("release") }/g' \
-            node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
-
       - name: Build AAB
         script: |
           export NODE_PATH="$PWD/node_modules:$PWD/apps/customer-app/node_modules"
           cd apps/customer-app/android
-          ./gradlew bundleRelease --stacktrace 2>&1
+          ./gradlew bundleRelease -PreactNativeArchitectures=arm64-v8a,armeabi-v7a --stacktrace 2>&1
 
     artifacts:
       - apps/customer-app/android/app/build/outputs/bundle/release/*.aab
@@ -288,6 +283,7 @@ workflows:
       vars:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
+        EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
       node: 20.17.0
       java: 17
 
@@ -329,12 +325,15 @@ workflows:
               "            storePassword keystoreProperties['storePassword']\n"
               "            keyAlias keystoreProperties['keyAlias']\n"
               "            keyPassword keystoreProperties['keyPassword']\n"
-              '        }\n        debug {'
-          ).replace(
+              '        }\n        debug {',
+              1
+          )
+          content = content.replace(
               '            // Caution! In production, you need to generate your own keystore file.\n'
               '            // see https://reactnative.dev/docs/signed-apk-android.\n'
               '            signingConfig signingConfigs.debug',
-              '            signingConfig signingConfigs.release'
+              '            signingConfig signingConfigs.release',
+              1
           )
           with open('apps/driver-app/android/app/build.gradle', 'w') as f:
               f.write(content)
@@ -348,16 +347,11 @@ workflows:
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
           sed -i '' "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
 
-      - name: Patch expo-modules-core
-        script: |
-          sed -i '' 's/from components\.release/afterEvaluate { from components.findByName("release") }/g' \
-            node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
-
       - name: Build AAB
         script: |
           export NODE_PATH="$PWD/node_modules:$PWD/apps/driver-app/node_modules"
           cd apps/driver-app/android
-          ./gradlew bundleRelease
+          ./gradlew bundleRelease -PreactNativeArchitectures=arm64-v8a,armeabi-v7a --stacktrace 2>&1
 
     artifacts:
       - apps/driver-app/android/app/build/outputs/bundle/release/*.aab
@@ -410,12 +404,15 @@ workflows:
           python3 << 'PYEOF'
           with open('apps/customer-app/ios/Podfile', 'r') as f:
               content = f.read()
-          content = content.replace(
-              "target 'Transit' do",
-              "target 'Transit' do\n  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git'"
-          )
+          if 'razorpay-pod' not in content:
+              content = content.replace(
+                  "target 'Transit' do",
+                  "target 'Transit' do\n  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git'",
+                  1
+              )
           with open('apps/customer-app/ios/Podfile', 'w') as f:
               f.write(content)
+          print('✅ Podfile patched')
           PYEOF
 
       - name: Fetch signing certificate and profile
@@ -431,19 +428,21 @@ workflows:
           keychain initialize
           keychain add-certificates --certificate /tmp/cert.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
 
-      - name: Detect Xcode workspace
-        script: |
-          WS=$(find apps/customer-app/ios -name "*.xcworkspace" -maxdepth 2 | head -1)
-          SCHEME=$(basename "$WS" .xcworkspace)
-          echo "XCODE_WORKSPACE=$WS" >> $CM_ENV
-          echo "XCODE_SCHEME=$SCHEME" >> $CM_ENV
-
       - name: Install CocoaPods
         script: |
-          ls apps/customer-app/ios || { echo "ERROR: ios folder missing — prebuild may have failed"; exit 1; }
+          ls apps/customer-app/ios/Podfile || { echo "ERROR: Podfile missing — prebuild failed"; exit 1; }
           export NODE_PATH="$PWD/node_modules:$PWD/apps/customer-app/node_modules"
           cd apps/customer-app/ios
           pod install --verbose 2>&1
+
+      - name: Detect Xcode workspace
+        script: |
+          WS=$(find apps/customer-app/ios -name "*.xcworkspace" -maxdepth 2 | head -1)
+          if [ -z "$WS" ]; then echo "ERROR: No .xcworkspace found after pod install"; exit 1; fi
+          SCHEME=$(basename "$WS" .xcworkspace)
+          echo "XCODE_WORKSPACE=$WS" >> $CM_ENV
+          echo "XCODE_SCHEME=$SCHEME" >> $CM_ENV
+          echo "Workspace: $WS  Scheme: $SCHEME"
 
       - name: Set build number
         script: |
@@ -487,6 +486,7 @@ workflows:
       vars:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
+        EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
         BUNDLE_ID: "in.transitco.driver"
       node: 20.17.0
       xcode: latest
@@ -516,12 +516,15 @@ workflows:
           python3 << 'PYEOF'
           with open('apps/driver-app/ios/Podfile', 'r') as f:
               content = f.read()
-          content = content.replace(
-              "target 'Transit Driver' do",
-              "target 'Transit Driver' do\n  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git'"
-          )
+          if 'razorpay-pod' not in content:
+              content = content.replace(
+                  "target 'Transit Driver' do",
+                  "target 'Transit Driver' do\n  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git'",
+                  1
+              )
           with open('apps/driver-app/ios/Podfile', 'w') as f:
               f.write(content)
+          print('✅ Podfile patched')
           PYEOF
 
       - name: Fetch signing certificate and profile
@@ -537,18 +540,21 @@ workflows:
           keychain initialize
           keychain add-certificates --certificate /tmp/cert.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
 
+      - name: Install CocoaPods
+        script: |
+          ls apps/driver-app/ios/Podfile || { echo "ERROR: Podfile missing — prebuild failed"; exit 1; }
+          export NODE_PATH="$PWD/node_modules:$PWD/apps/driver-app/node_modules"
+          cd apps/driver-app/ios
+          pod install --verbose 2>&1
+
       - name: Detect Xcode workspace
         script: |
           WS=$(find apps/driver-app/ios -name "*.xcworkspace" -maxdepth 2 | head -1)
+          if [ -z "$WS" ]; then echo "ERROR: No .xcworkspace found after pod install"; exit 1; fi
           SCHEME=$(basename "$WS" .xcworkspace)
           echo "XCODE_WORKSPACE=$WS" >> $CM_ENV
           echo "XCODE_SCHEME=$SCHEME" >> $CM_ENV
-
-      - name: Install CocoaPods
-        script: |
-          export NODE_PATH="$PWD/node_modules:$PWD/apps/driver-app/node_modules"
-          cd apps/driver-app/ios
-          pod install
+          echo "Workspace: $WS  Scheme: $SCHEME"
 
       - name: Set build number
         script: |

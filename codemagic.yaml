@@ -79,6 +79,12 @@ workflows:
           cd apps/customer-app/android
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
 
+      - name: Patch expo-modules-core
+        script: |
+          sed -i '' 's/from components\.release/afterEvaluate { from components.findByName("release") }/g' \
+            node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
+          grep "components" node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
+
       - name: Build APK
         script: |
           cd apps/customer-app/android
@@ -165,6 +171,12 @@ workflows:
         script: |
           cd apps/driver-app/android
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
+
+      - name: Patch expo-modules-core
+        script: |
+          sed -i '' 's/from components\.release/afterEvaluate { from components.findByName("release") }/g' \
+            node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
+          grep "components" node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
 
       - name: Build APK
         script: |
@@ -258,6 +270,12 @@ workflows:
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
           sed -i '' "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
 
+      - name: Patch expo-modules-core
+        script: |
+          sed -i '' 's/from components\.release/afterEvaluate { from components.findByName("release") }/g' \
+            node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
+          grep "components" node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
+
       - name: Build AAB
         script: |
           cd apps/customer-app/android
@@ -349,6 +367,12 @@ workflows:
           cd apps/driver-app/android
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
           sed -i '' "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
+
+      - name: Patch expo-modules-core
+        script: |
+          sed -i '' 's/from components\.release/afterEvaluate { from components.findByName("release") }/g' \
+            node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
+          grep "components" node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
 
       - name: Build AAB
         script: |

@@ -404,6 +404,10 @@ workflows:
           cd apps/customer-app
           npx expo prebuild --platform ios --clean --non-interactive
 
+      - name: Patch Podfile
+        script: |
+          perl -i -0pe 's/,\s*\n\s*:privacy_file_aggregation_enabled\s*=>[^\n]*//g' apps/customer-app/ios/Podfile
+
       - name: Fetch signing certificate and profile
         script: |
           printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
@@ -495,6 +499,10 @@ workflows:
         script: |
           cd apps/driver-app
           npx expo prebuild --platform ios --clean --non-interactive
+
+      - name: Patch Podfile
+        script: |
+          perl -i -0pe 's/,\s*\n\s*:privacy_file_aggregation_enabled\s*=>[^\n]*//g' apps/driver-app/ios/Podfile
 
       - name: Fetch signing certificate and profile
         script: |

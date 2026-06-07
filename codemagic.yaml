@@ -32,11 +32,6 @@ workflows:
       - name: Install dependencies
         script: npm install
 
-- name: Expo prebuild
-        script: |
-          cd apps/customer-app
-          npx expo prebuild --platform android --clean --non-interactive
-
       - name: Configure release signing
         script: |
           cat > apps/customer-app/android/key.properties << EOF
@@ -83,7 +78,6 @@ workflows:
         script: |
           sed -i '' 's/from components\.release/afterEvaluate { from components.findByName("release") }/g' \
             node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
-          grep "components" node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
 
       - name: Build APK
         script: |
@@ -124,11 +118,6 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm install
-
-- name: Expo prebuild
-        script: |
-          cd apps/driver-app
-          npx expo prebuild --platform android --clean --non-interactive
 
       - name: Configure release signing
         script: |
@@ -176,7 +165,6 @@ workflows:
         script: |
           sed -i '' 's/from components\.release/afterEvaluate { from components.findByName("release") }/g' \
             node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
-          grep "components" node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
 
       - name: Build APK
         script: |
@@ -188,7 +176,7 @@ workflows:
 
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Transit Customer — Android AAB → Play Store internal track
+  # Transit Customer — Android AAB (Play Store)
   # Trigger: tag customer-v*
   # ─────────────────────────────────────────────────────────────────────────────
   transit-customer-android-prod:
@@ -220,11 +208,6 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm install
-
-- name: Expo prebuild
-        script: |
-          cd apps/customer-app
-          npx expo prebuild --platform android --clean --non-interactive
 
       - name: Configure release signing
         script: |
@@ -274,7 +257,6 @@ workflows:
         script: |
           sed -i '' 's/from components\.release/afterEvaluate { from components.findByName("release") }/g' \
             node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
-          grep "components" node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
 
       - name: Build AAB
         script: |
@@ -287,7 +269,7 @@ workflows:
 
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Transit Driver — Android AAB → Play Store internal track
+  # Transit Driver — Android AAB (Play Store)
   # Trigger: tag driver-v*
   # ─────────────────────────────────────────────────────────────────────────────
   transit-driver-android-prod:
@@ -318,11 +300,6 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm install
-
-- name: Expo prebuild
-        script: |
-          cd apps/driver-app
-          npx expo prebuild --platform android --clean --non-interactive
 
       - name: Configure release signing
         script: |
@@ -372,7 +349,6 @@ workflows:
         script: |
           sed -i '' 's/from components\.release/afterEvaluate { from components.findByName("release") }/g' \
             node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
-          grep "components" node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
 
       - name: Build AAB
         script: |
@@ -385,7 +361,7 @@ workflows:
 
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Transit Customer — iOS → TestFlight
+  # Transit Customer — iOS (TestFlight)
   # Trigger: tag customer-v*
   # ─────────────────────────────────────────────────────────────────────────────
   transit-customer-ios:
@@ -404,8 +380,6 @@ workflows:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
-        XCODE_WORKSPACE: apps/customer-app/ios/TransitCustomer.xcworkspace
-        XCODE_SCHEME: TransitCustomer
       node: 20.17.0
       xcode: latest
       cocoapods: default
@@ -428,13 +402,12 @@ workflows:
           cd apps/customer-app
           npx expo prebuild --platform ios --clean --non-interactive
 
-      - name: Detect Xcode workspace name
+      - name: Detect Xcode workspace
         script: |
           WS=$(find apps/customer-app/ios -name "*.xcworkspace" -maxdepth 2 | head -1)
           SCHEME=$(basename "$WS" .xcworkspace)
           echo "XCODE_WORKSPACE=$WS" >> $CM_ENV
           echo "XCODE_SCHEME=$SCHEME" >> $CM_ENV
-          echo "Workspace: $WS | Scheme: $SCHEME"
 
       - name: Install CocoaPods
         script: |
@@ -469,7 +442,7 @@ workflows:
 
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Transit Driver — iOS → TestFlight
+  # Transit Driver — iOS (TestFlight)
   # Trigger: tag driver-v*
   # ─────────────────────────────────────────────────────────────────────────────
   transit-driver-ios:
@@ -487,8 +460,6 @@ workflows:
       vars:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
-        XCODE_WORKSPACE: apps/driver-app/ios/TransitDriver.xcworkspace
-        XCODE_SCHEME: TransitDriver
       node: 20.17.0
       xcode: latest
       cocoapods: default
@@ -511,13 +482,12 @@ workflows:
           cd apps/driver-app
           npx expo prebuild --platform ios --clean --non-interactive
 
-      - name: Detect Xcode workspace name
+      - name: Detect Xcode workspace
         script: |
           WS=$(find apps/driver-app/ios -name "*.xcworkspace" -maxdepth 2 | head -1)
           SCHEME=$(basename "$WS" .xcworkspace)
           echo "XCODE_WORKSPACE=$WS" >> $CM_ENV
           echo "XCODE_SCHEME=$SCHEME" >> $CM_ENV
-          echo "Workspace: $WS | Scheme: $SCHEME"
 
       - name: Install CocoaPods
         script: |

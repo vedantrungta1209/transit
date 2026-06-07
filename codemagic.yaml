@@ -426,6 +426,7 @@ workflows:
 
       - name: Install CocoaPods
         script: |
+          ls apps/customer-app/ios || { echo "ERROR: ios folder missing — prebuild may have failed"; exit 1; }
           cd apps/customer-app/ios
           pod install
 

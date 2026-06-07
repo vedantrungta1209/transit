@@ -81,6 +81,7 @@ workflows:
 
       - name: Build APK
         script: |
+          export NODE_PATH="$PWD/node_modules:$PWD/apps/customer-app/node_modules"
           cd apps/customer-app/android
           ./gradlew assembleRelease
 
@@ -168,6 +169,7 @@ workflows:
 
       - name: Build APK
         script: |
+          export NODE_PATH="$PWD/node_modules:$PWD/apps/driver-app/node_modules"
           cd apps/driver-app/android
           ./gradlew assembleRelease
 
@@ -260,6 +262,7 @@ workflows:
 
       - name: Build AAB
         script: |
+          export NODE_PATH="$PWD/node_modules:$PWD/apps/customer-app/node_modules"
           cd apps/customer-app/android
           ./gradlew bundleRelease
 
@@ -352,6 +355,7 @@ workflows:
 
       - name: Build AAB
         script: |
+          export NODE_PATH="$PWD/node_modules:$PWD/apps/driver-app/node_modules"
           cd apps/driver-app/android
           ./gradlew bundleRelease
 

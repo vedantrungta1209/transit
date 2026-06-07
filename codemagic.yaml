@@ -264,7 +264,7 @@ workflows:
         script: |
           export NODE_PATH="$PWD/node_modules:$PWD/apps/customer-app/node_modules"
           cd apps/customer-app/android
-          ./gradlew bundleRelease
+          ./gradlew bundleRelease --stacktrace 2>&1
 
     artifacts:
       - apps/customer-app/android/app/build/outputs/bundle/release/*.aab
@@ -407,6 +407,9 @@ workflows:
       - name: Patch Podfile
         script: |
           perl -i -0pe 's/,\s*\n\s*:privacy_file_aggregation_enabled\s*=>[^\n]*//g' apps/customer-app/ios/Podfile
+          sed -i '' "/^target 'Transit' do/a\\
+  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git'
+" apps/customer-app/ios/Podfile
 
       - name: Fetch signing certificate and profile
         script: |
@@ -503,6 +506,9 @@ workflows:
       - name: Patch Podfile
         script: |
           perl -i -0pe 's/,\s*\n\s*:privacy_file_aggregation_enabled\s*=>[^\n]*//g' apps/driver-app/ios/Podfile
+          sed -i '' "/^target 'Transit Driver' do/a\\
+  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git'
+" apps/driver-app/ios/Podfile
 
       - name: Fetch signing certificate and profile
         script: |

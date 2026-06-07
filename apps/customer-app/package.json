@@ -17,6 +17,7 @@
     "@transit/shared": "*",
     "axios": "^1.7.0",
     "expo": "~51.0.0",
+    "expo-linking": "~6.3.0",
     "expo-location": "~17.0.0",
     "expo-router": "~3.5.0",
     "expo-secure-store": "~13.0.0",

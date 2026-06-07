@@ -32,6 +32,20 @@ workflows:
       - name: Install dependencies
         script: npm install
 
+      - name: Patch expo-modules-core (AGP 8.3+ fix)
+        script: |
+          python3 << 'PYEOF'
+          with open('node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle', 'r') as f:
+              content = f.read()
+          fixed = content.replace(
+              'from components.release',
+              'afterEvaluate { from components.findByName("release") }'
+          )
+          with open('node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle', 'w') as f:
+              f.write(fixed)
+          print('✅ expo-modules-core AGP patch applied')
+          PYEOF
+
       - name: Expo prebuild
         script: |
           cd apps/customer-app
@@ -118,6 +132,20 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm install
+
+      - name: Patch expo-modules-core (AGP 8.3+ fix)
+        script: |
+          python3 << 'PYEOF'
+          with open('node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle', 'r') as f:
+              content = f.read()
+          fixed = content.replace(
+              'from components.release',
+              'afterEvaluate { from components.findByName("release") }'
+          )
+          with open('node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle', 'w') as f:
+              f.write(fixed)
+          print('✅ expo-modules-core AGP patch applied')
+          PYEOF
 
       - name: Expo prebuild
         script: |
@@ -208,6 +236,20 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm install
+
+      - name: Patch expo-modules-core (AGP 8.3+ fix)
+        script: |
+          python3 << 'PYEOF'
+          with open('node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle', 'r') as f:
+              content = f.read()
+          fixed = content.replace(
+              'from components.release',
+              'afterEvaluate { from components.findByName("release") }'
+          )
+          with open('node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle', 'w') as f:
+              f.write(fixed)
+          print('✅ expo-modules-core AGP patch applied')
+          PYEOF
 
       - name: Expo prebuild
         script: |
@@ -300,6 +342,20 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm install
+
+      - name: Patch expo-modules-core (AGP 8.3+ fix)
+        script: |
+          python3 << 'PYEOF'
+          with open('node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle', 'r') as f:
+              content = f.read()
+          fixed = content.replace(
+              'from components.release',
+              'afterEvaluate { from components.findByName("release") }'
+          )
+          with open('node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle', 'w') as f:
+              f.write(fixed)
+          print('✅ expo-modules-core AGP patch applied')
+          PYEOF
 
       - name: Expo prebuild
         script: |

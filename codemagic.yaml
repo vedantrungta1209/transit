@@ -443,7 +443,7 @@ workflows:
           ls apps/customer-app/ios || { echo "ERROR: ios folder missing — prebuild may have failed"; exit 1; }
           export NODE_PATH="$PWD/node_modules:$PWD/apps/customer-app/node_modules"
           cd apps/customer-app/ios
-          pod install
+          pod install --verbose 2>&1
 
       - name: Set build number
         script: |

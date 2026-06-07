@@ -1,8 +1,8 @@
 workflows:
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Transit Customer — Android APK (for sideload / internal testing)
-  # Trigger: tag customer-preview-v*  OR  manual from Codemagic dashboard
+  # Transit Customer — Android APK (sideload / internal testing)
+  # Trigger: tag customer-preview-v*  OR  manual
   # ─────────────────────────────────────────────────────────────────────────────
   transit-customer-android-apk:
     name: Transit Customer — Android APK
@@ -13,7 +13,7 @@ workflows:
       android_signing:
         - transit_customer_keystore
       groups:
-        - transit_android          # must contain EXPO_TOKEN
+        - transit_android
       vars:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
@@ -32,7 +32,7 @@ workflows:
       - name: Install dependencies
         script: npm install
 
-      - name: Expo prebuild (Android)
+      - name: Expo prebuild
         script: |
           cd apps/customer-app
           npx expo prebuild --platform android --clean --non-interactive
@@ -49,13 +49,11 @@ workflows:
           python3 << 'PYEOF'
           with open('apps/customer-app/android/app/build.gradle', 'r') as f:
               content = f.read()
-
           loader = (
               '\ndef keystorePropertiesFile = rootProject.file("key.properties")\n'
               'def keystoreProperties = new Properties()\n'
               'keystoreProperties.load(new FileInputStream(keystorePropertiesFile))\n\n'
           )
-
           content = content.replace(
               '    signingConfigs {\n        debug {',
               loader + '    signingConfigs {\n'
@@ -64,15 +62,13 @@ workflows:
               "            storePassword keystoreProperties['storePassword']\n"
               "            keyAlias keystoreProperties['keyAlias']\n"
               "            keyPassword keystoreProperties['keyPassword']\n"
-              '        }\n'
-              '        debug {'
+              '        }\n        debug {'
           ).replace(
               '            // Caution! In production, you need to generate your own keystore file.\n'
               '            // see https://reactnative.dev/docs/signed-apk-android.\n'
               '            signingConfig signingConfigs.debug',
               '            signingConfig signingConfigs.release'
           )
-
           with open('apps/customer-app/android/app/build.gradle', 'w') as f:
               f.write(content)
           print('✅ Release signing config patched')
@@ -90,12 +86,11 @@ workflows:
 
     artifacts:
       - apps/customer-app/android/app/build/outputs/apk/release/*.apk
-      - apps/customer-app/android/app/build/outputs/**/mapping.txt
 
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Transit Driver — Android APK (for sideload / internal testing)
-  # Trigger: tag driver-preview-v*  OR  manual from Codemagic dashboard
+  # Transit Driver — Android APK (sideload / internal testing)
+  # Trigger: tag driver-preview-v*  OR  manual
   # ─────────────────────────────────────────────────────────────────────────────
   transit-driver-android-apk:
     name: Transit Driver — Android APK
@@ -124,7 +119,7 @@ workflows:
       - name: Install dependencies
         script: npm install
 
-      - name: Expo prebuild (Android)
+      - name: Expo prebuild
         script: |
           cd apps/driver-app
           npx expo prebuild --platform android --clean --non-interactive
@@ -141,13 +136,11 @@ workflows:
           python3 << 'PYEOF'
           with open('apps/driver-app/android/app/build.gradle', 'r') as f:
               content = f.read()
-
           loader = (
               '\ndef keystorePropertiesFile = rootProject.file("key.properties")\n'
               'def keystoreProperties = new Properties()\n'
               'keystoreProperties.load(new FileInputStream(keystorePropertiesFile))\n\n'
           )
-
           content = content.replace(
               '    signingConfigs {\n        debug {',
               loader + '    signingConfigs {\n'
@@ -156,15 +149,13 @@ workflows:
               "            storePassword keystoreProperties['storePassword']\n"
               "            keyAlias keystoreProperties['keyAlias']\n"
               "            keyPassword keystoreProperties['keyPassword']\n"
-              '        }\n'
-              '        debug {'
+              '        }\n        debug {'
           ).replace(
               '            // Caution! In production, you need to generate your own keystore file.\n'
               '            // see https://reactnative.dev/docs/signed-apk-android.\n'
               '            signingConfig signingConfigs.debug',
               '            signingConfig signingConfigs.release'
           )
-
           with open('apps/driver-app/android/app/build.gradle', 'w') as f:
               f.write(content)
           print('✅ Release signing config patched')
@@ -182,11 +173,10 @@ workflows:
 
     artifacts:
       - apps/driver-app/android/app/build/outputs/apk/release/*.apk
-      - apps/driver-app/android/app/build/outputs/**/mapping.txt
 
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Transit Customer — Android AAB (Play Store)
+  # Transit Customer — Android AAB → Play Store internal track
   # Trigger: tag customer-v*
   # ─────────────────────────────────────────────────────────────────────────────
   transit-customer-android-prod:
@@ -219,7 +209,7 @@ workflows:
       - name: Install dependencies
         script: npm install
 
-      - name: Expo prebuild (Android)
+      - name: Expo prebuild
         script: |
           cd apps/customer-app
           npx expo prebuild --platform android --clean --non-interactive
@@ -236,13 +226,11 @@ workflows:
           python3 << 'PYEOF'
           with open('apps/customer-app/android/app/build.gradle', 'r') as f:
               content = f.read()
-
           loader = (
               '\ndef keystorePropertiesFile = rootProject.file("key.properties")\n'
               'def keystoreProperties = new Properties()\n'
               'keystoreProperties.load(new FileInputStream(keystorePropertiesFile))\n\n'
           )
-
           content = content.replace(
               '    signingConfigs {\n        debug {',
               loader + '    signingConfigs {\n'
@@ -251,24 +239,21 @@ workflows:
               "            storePassword keystoreProperties['storePassword']\n"
               "            keyAlias keystoreProperties['keyAlias']\n"
               "            keyPassword keystoreProperties['keyPassword']\n"
-              '        }\n'
-              '        debug {'
+              '        }\n        debug {'
           ).replace(
               '            // Caution! In production, you need to generate your own keystore file.\n'
               '            // see https://reactnative.dev/docs/signed-apk-android.\n'
               '            signingConfig signingConfigs.debug',
               '            signingConfig signingConfigs.release'
           )
-
           with open('apps/customer-app/android/app/build.gradle', 'w') as f:
               f.write(content)
           print('✅ Release signing config patched')
           PYEOF
 
-      - name: Set version code and name from tag
+      - name: Set version code and name
         script: |
-          TAG=${FCI_TAG:-$(git describe --tags --abbrev=0)}
-          VERSION=$(echo $TAG | sed 's/customer-v//')
+          VERSION=$(echo $FCI_TAG | sed 's/customer-v//')
           cd apps/customer-app/android
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
           sed -i '' "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
@@ -278,13 +263,44 @@ workflows:
           cd apps/customer-app/android
           ./gradlew bundleRelease
 
+      - name: Publish to Play Store (internal track)
+        script: |
+          echo "$GPLAY_SA_JSON" > /tmp/gplay_key.json
+          pip install google-auth google-api-python-client --quiet
+          python3 << 'PYEOF'
+          import glob
+          from googleapiclient.discovery import build
+          from google.oauth2 import service_account
+
+          creds = service_account.Credentials.from_service_account_file(
+              '/tmp/gplay_key.json',
+              scopes=['https://www.googleapis.com/auth/androidpublisher']
+          )
+          service = build('androidpublisher', 'v3', credentials=creds)
+          package = 'in.transitco.customer'
+          edit = service.edits().insert(body={}, packageName=package).execute()
+          edit_id = edit['id']
+          aab = glob.glob('apps/customer-app/android/app/build/outputs/**/*.aab', recursive=True)[0]
+          with open(aab, 'rb') as f:
+              service.edits().bundles().upload(
+                  packageName=package, editId=edit_id,
+                  media_body=aab, media_mime_type='application/octet-stream'
+              ).execute()
+          service.edits().tracks().update(
+              packageName=package, editId=edit_id, track='internal',
+              body={'releases': [{'status': 'completed', 'releaseNotes': []}]}
+          ).execute()
+          service.edits().commit(packageName=package, editId=edit_id).execute()
+          print('✅ Published to Play Store internal track')
+          PYEOF
+
     artifacts:
       - apps/customer-app/android/app/build/outputs/bundle/release/*.aab
       - apps/customer-app/android/app/build/outputs/**/mapping.txt
 
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Transit Driver — Android AAB (Play Store)
+  # Transit Driver — Android AAB → Play Store internal track
   # Trigger: tag driver-v*
   # ─────────────────────────────────────────────────────────────────────────────
   transit-driver-android-prod:
@@ -316,7 +332,7 @@ workflows:
       - name: Install dependencies
         script: npm install
 
-      - name: Expo prebuild (Android)
+      - name: Expo prebuild
         script: |
           cd apps/driver-app
           npx expo prebuild --platform android --clean --non-interactive
@@ -333,13 +349,11 @@ workflows:
           python3 << 'PYEOF'
           with open('apps/driver-app/android/app/build.gradle', 'r') as f:
               content = f.read()
-
           loader = (
               '\ndef keystorePropertiesFile = rootProject.file("key.properties")\n'
               'def keystoreProperties = new Properties()\n'
               'keystoreProperties.load(new FileInputStream(keystorePropertiesFile))\n\n'
           )
-
           content = content.replace(
               '    signingConfigs {\n        debug {',
               loader + '    signingConfigs {\n'
@@ -348,24 +362,21 @@ workflows:
               "            storePassword keystoreProperties['storePassword']\n"
               "            keyAlias keystoreProperties['keyAlias']\n"
               "            keyPassword keystoreProperties['keyPassword']\n"
-              '        }\n'
-              '        debug {'
+              '        }\n        debug {'
           ).replace(
               '            // Caution! In production, you need to generate your own keystore file.\n'
               '            // see https://reactnative.dev/docs/signed-apk-android.\n'
               '            signingConfig signingConfigs.debug',
               '            signingConfig signingConfigs.release'
           )
-
           with open('apps/driver-app/android/app/build.gradle', 'w') as f:
               f.write(content)
           print('✅ Release signing config patched')
           PYEOF
 
-      - name: Set version code and name from tag
+      - name: Set version code and name
         script: |
-          TAG=${FCI_TAG:-$(git describe --tags --abbrev=0)}
-          VERSION=$(echo $TAG | sed 's/driver-v//')
+          VERSION=$(echo $FCI_TAG | sed 's/driver-v//')
           cd apps/driver-app/android
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
           sed -i '' "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
@@ -375,6 +386,204 @@ workflows:
           cd apps/driver-app/android
           ./gradlew bundleRelease
 
+      - name: Publish to Play Store (internal track)
+        script: |
+          echo "$GPLAY_SA_JSON" > /tmp/gplay_key.json
+          pip install google-auth google-api-python-client --quiet
+          python3 << 'PYEOF'
+          import glob
+          from googleapiclient.discovery import build
+          from google.oauth2 import service_account
+
+          creds = service_account.Credentials.from_service_account_file(
+              '/tmp/gplay_key.json',
+              scopes=['https://www.googleapis.com/auth/androidpublisher']
+          )
+          service = build('androidpublisher', 'v3', credentials=creds)
+          package = 'in.transitco.driver'
+          edit = service.edits().insert(body={}, packageName=package).execute()
+          edit_id = edit['id']
+          aab = glob.glob('apps/driver-app/android/app/build/outputs/**/*.aab', recursive=True)[0]
+          with open(aab, 'rb') as f:
+              service.edits().bundles().upload(
+                  packageName=package, editId=edit_id,
+                  media_body=aab, media_mime_type='application/octet-stream'
+              ).execute()
+          service.edits().tracks().update(
+              packageName=package, editId=edit_id, track='internal',
+              body={'releases': [{'status': 'completed', 'releaseNotes': []}]}
+          ).execute()
+          service.edits().commit(packageName=package, editId=edit_id).execute()
+          print('✅ Published to Play Store internal track')
+          PYEOF
+
     artifacts:
       - apps/driver-app/android/app/build/outputs/bundle/release/*.aab
       - apps/driver-app/android/app/build/outputs/**/mapping.txt
+
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Transit Customer — iOS → TestFlight
+  # Trigger: tag customer-v*
+  # ─────────────────────────────────────────────────────────────────────────────
+  transit-customer-ios:
+    name: Transit Customer — iOS (TestFlight)
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: in.transitco.customer
+      groups:
+        - transit_ios
+        - transit_android
+      vars:
+        EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
+        EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
+        EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
+        XCODE_WORKSPACE: apps/customer-app/ios/TransitCustomer.xcworkspace
+        XCODE_SCHEME: TransitCustomer
+      node: 20.17.0
+      xcode: latest
+      cocoapods: default
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'customer-v*'
+          include: true
+        - pattern: 'customer-preview-v*'
+          include: false
+
+    scripts:
+      - name: Install dependencies
+        script: npm install
+
+      - name: Expo prebuild (iOS)
+        script: |
+          cd apps/customer-app
+          npx expo prebuild --platform ios --clean --non-interactive
+
+      - name: Detect Xcode workspace name
+        script: |
+          WS=$(find apps/customer-app/ios -name "*.xcworkspace" -maxdepth 2 | head -1)
+          SCHEME=$(basename "$WS" .xcworkspace)
+          echo "XCODE_WORKSPACE=$WS" >> $CM_ENV
+          echo "XCODE_SCHEME=$SCHEME" >> $CM_ENV
+          echo "Workspace: $WS | Scheme: $SCHEME"
+
+      - name: Install CocoaPods
+        script: |
+          cd apps/customer-app/ios
+          pod install
+
+      - name: Set build number
+        script: |
+          cd apps/customer-app/ios
+          agvtool new-version -all $BUILD_NUMBER
+
+      - name: Build IPA
+        script: |
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+      - name: Upload to TestFlight
+        script: |
+          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
+          app-store-connect publish \
+            --path "$(find build/ios/ipa -name '*.ipa' | head -1)" \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --private-key @file:/tmp/asc_key.p8 \
+            --testflight
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Transit Driver — iOS → TestFlight
+  # Trigger: tag driver-v*
+  # ─────────────────────────────────────────────────────────────────────────────
+  transit-driver-ios:
+    name: Transit Driver — iOS (TestFlight)
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: in.transitco.driver
+      groups:
+        - transit_ios
+        - transit_android
+      vars:
+        EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
+        EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
+        XCODE_WORKSPACE: apps/driver-app/ios/TransitDriver.xcworkspace
+        XCODE_SCHEME: TransitDriver
+      node: 20.17.0
+      xcode: latest
+      cocoapods: default
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'driver-v*'
+          include: true
+        - pattern: 'driver-preview-v*'
+          include: false
+
+    scripts:
+      - name: Install dependencies
+        script: npm install
+
+      - name: Expo prebuild (iOS)
+        script: |
+          cd apps/driver-app
+          npx expo prebuild --platform ios --clean --non-interactive
+
+      - name: Detect Xcode workspace name
+        script: |
+          WS=$(find apps/driver-app/ios -name "*.xcworkspace" -maxdepth 2 | head -1)
+          SCHEME=$(basename "$WS" .xcworkspace)
+          echo "XCODE_WORKSPACE=$WS" >> $CM_ENV
+          echo "XCODE_SCHEME=$SCHEME" >> $CM_ENV
+          echo "Workspace: $WS | Scheme: $SCHEME"
+
+      - name: Install CocoaPods
+        script: |
+          cd apps/driver-app/ios
+          pod install
+
+      - name: Set build number
+        script: |
+          cd apps/driver-app/ios
+          agvtool new-version -all $BUILD_NUMBER
+
+      - name: Build IPA
+        script: |
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+      - name: Upload to TestFlight
+        script: |
+          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
+          app-store-connect publish \
+            --path "$(find build/ios/ipa -name '*.ipa' | head -1)" \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --private-key @file:/tmp/asc_key.p8 \
+            --testflight
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log

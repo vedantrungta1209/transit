@@ -407,9 +407,16 @@ workflows:
       - name: Patch Podfile
         script: |
           perl -i -0pe 's/,\s*\n\s*:privacy_file_aggregation_enabled\s*=>[^\n]*//g' apps/customer-app/ios/Podfile
-          sed -i '' "/^target 'Transit' do/a\\
-  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git'
-" apps/customer-app/ios/Podfile
+          python3 << 'PYEOF'
+          with open('apps/customer-app/ios/Podfile', 'r') as f:
+              content = f.read()
+          content = content.replace(
+              "target 'Transit' do",
+              "target 'Transit' do\n  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git'"
+          )
+          with open('apps/customer-app/ios/Podfile', 'w') as f:
+              f.write(content)
+          PYEOF
 
       - name: Fetch signing certificate and profile
         script: |
@@ -506,9 +513,16 @@ workflows:
       - name: Patch Podfile
         script: |
           perl -i -0pe 's/,\s*\n\s*:privacy_file_aggregation_enabled\s*=>[^\n]*//g' apps/driver-app/ios/Podfile
-          sed -i '' "/^target 'Transit Driver' do/a\\
-  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git'
-" apps/driver-app/ios/Podfile
+          python3 << 'PYEOF'
+          with open('apps/driver-app/ios/Podfile', 'r') as f:
+              content = f.read()
+          content = content.replace(
+              "target 'Transit Driver' do",
+              "target 'Transit Driver' do\n  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git'"
+          )
+          with open('apps/driver-app/ios/Podfile', 'w') as f:
+              f.write(content)
+          PYEOF
 
       - name: Fetch signing certificate and profile
         script: |

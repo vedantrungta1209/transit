@@ -407,14 +407,15 @@ workflows:
       - name: Fetch signing certificate and profile
         script: |
           printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
+          echo "$CM_CERTIFICATE" | base64 --decode > /tmp/cert.p12
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --certificate-key @file:/tmp/asc_key.p8 \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --private-key @file:/tmp/asc_key.p8 \
             --create
           keychain initialize
-          keychain add-certificates
+          keychain add-certificates --certificate /tmp/cert.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
 
       - name: Detect Xcode workspace
         script: |
@@ -496,14 +497,15 @@ workflows:
       - name: Fetch signing certificate and profile
         script: |
           printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
+          echo "$CM_CERTIFICATE" | base64 --decode > /tmp/cert.p12
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --certificate-key @file:/tmp/asc_key.p8 \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --private-key @file:/tmp/asc_key.p8 \
             --create
           keychain initialize
-          keychain add-certificates
+          keychain add-certificates --certificate /tmp/cert.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
 
       - name: Detect Xcode workspace
         script: |

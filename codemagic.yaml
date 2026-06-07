@@ -81,7 +81,7 @@ workflows:
       - name: Set version code
         script: |
           cd apps/customer-app/android
-          sed -i "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
+          sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
 
       - name: Build APK
         script: |
@@ -173,7 +173,7 @@ workflows:
       - name: Set version code
         script: |
           cd apps/driver-app/android
-          sed -i "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
+          sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
 
       - name: Build APK
         script: |
@@ -270,8 +270,8 @@ workflows:
           TAG=${FCI_TAG:-$(git describe --tags --abbrev=0)}
           VERSION=$(echo $TAG | sed 's/customer-v//')
           cd apps/customer-app/android
-          sed -i "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
-          sed -i "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
+          sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
+          sed -i '' "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
 
       - name: Build AAB
         script: |
@@ -367,8 +367,8 @@ workflows:
           TAG=${FCI_TAG:-$(git describe --tags --abbrev=0)}
           VERSION=$(echo $TAG | sed 's/driver-v//')
           cd apps/driver-app/android
-          sed -i "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
-          sed -i "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
+          sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
+          sed -i '' "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
 
       - name: Build AAB
         script: |

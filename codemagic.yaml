@@ -474,7 +474,7 @@ workflows:
         script: |
           perl -i -0pe 's/,\s*\n\s*:privacy_file_aggregation_enabled\s*=>[^\n]*//g' apps/customer-app/ios/Podfile
           python3 << 'PYEOF'
-          import glob
+          import os
 
           # 1. Add razorpay-pod from GitHub (CDN is unreachable on CI)
           with open('apps/customer-app/ios/Podfile', 'r') as f:
@@ -490,22 +490,33 @@ workflows:
           print('✅ Podfile patched')
 
           # 2. Fix React-jsinspector missing :modular_headers => true in react_native_pods.rb
-          # Without this, CocoaPods raises "Swift pod ExpoModulesCore depends upon
-          # React-jsinspector, which does not define modules"
+          # Glob finds @types/react-native copy first and breaks — use explicit paths instead
           old = "pod 'React-jsinspector', :path => \"#{prefix}/ReactCommon/jsinspector-modern\""
           new = "pod 'React-jsinspector', :path => \"#{prefix}/ReactCommon/jsinspector-modern\", :modular_headers => true"
-          for rn_pods in glob.glob('**/react-native/scripts/react_native_pods.rb', recursive=True):
-              if 'node_modules' in rn_pods:
-                  with open(rn_pods, 'r') as f:
-                      c = f.read()
-                  if old in c:
-                      with open(rn_pods, 'w') as f:
-                          f.write(c.replace(old, new, 1))
-                      print(f'✅ {rn_pods} patched')
-                      break
-                  elif new in c:
-                      print(f'ℹ️ {rn_pods} already has modular_headers')
-                      break
+          candidates = [
+              'apps/customer-app/node_modules/react-native/scripts/react_native_pods.rb',
+              'node_modules/react-native/scripts/react_native_pods.rb',
+          ]
+          patched = 0
+          for path in candidates:
+              if not os.path.exists(path):
+                  print(f'Not found (skip): {path}')
+                  continue
+              with open(path, 'r') as f:
+                  c = f.read()
+              if old in c:
+                  with open(path, 'w') as f:
+                      f.write(c.replace(old, new, 1))
+                  print(f'✅ Patched: {path}')
+                  patched += 1
+              elif new in c:
+                  print(f'Already patched: {path}')
+                  patched += 1
+              else:
+                  print(f'⚠️ Pattern not found in: {path}')
+          if patched == 0:
+              print('❌ ERROR: react_native_pods.rb not patched')
+              raise SystemExit(1)
           PYEOF
 
       - name: Fetch signing certificate and profile
@@ -607,7 +618,7 @@ workflows:
         script: |
           perl -i -0pe 's/,\s*\n\s*:privacy_file_aggregation_enabled\s*=>[^\n]*//g' apps/driver-app/ios/Podfile
           python3 << 'PYEOF'
-          import glob
+          import os
 
           # 1. Add razorpay-pod from GitHub (CDN is unreachable on CI)
           with open('apps/driver-app/ios/Podfile', 'r') as f:
@@ -623,20 +634,33 @@ workflows:
           print('✅ Podfile patched')
 
           # 2. Fix React-jsinspector missing :modular_headers => true in react_native_pods.rb
+          # Glob finds @types/react-native copy first and breaks — use explicit paths instead
           old = "pod 'React-jsinspector', :path => \"#{prefix}/ReactCommon/jsinspector-modern\""
           new = "pod 'React-jsinspector', :path => \"#{prefix}/ReactCommon/jsinspector-modern\", :modular_headers => true"
-          for rn_pods in glob.glob('**/react-native/scripts/react_native_pods.rb', recursive=True):
-              if 'node_modules' in rn_pods:
-                  with open(rn_pods, 'r') as f:
-                      c = f.read()
-                  if old in c:
-                      with open(rn_pods, 'w') as f:
-                          f.write(c.replace(old, new, 1))
-                      print(f'✅ {rn_pods} patched')
-                      break
-                  elif new in c:
-                      print(f'ℹ️ {rn_pods} already has modular_headers')
-                      break
+          candidates = [
+              'apps/driver-app/node_modules/react-native/scripts/react_native_pods.rb',
+              'node_modules/react-native/scripts/react_native_pods.rb',
+          ]
+          patched = 0
+          for path in candidates:
+              if not os.path.exists(path):
+                  print(f'Not found (skip): {path}')
+                  continue
+              with open(path, 'r') as f:
+                  c = f.read()
+              if old in c:
+                  with open(path, 'w') as f:
+                      f.write(c.replace(old, new, 1))
+                  print(f'✅ Patched: {path}')
+                  patched += 1
+              elif new in c:
+                  print(f'Already patched: {path}')
+                  patched += 1
+              else:
+                  print(f'⚠️ Pattern not found in: {path}')
+          if patched == 0:
+              print('❌ ERROR: react_native_pods.rb not patched')
+              raise SystemExit(1)
           PYEOF
 
       - name: Fetch signing certificate and profile

@@ -519,25 +519,31 @@ workflows:
               raise SystemExit(1)
           PYEOF
 
-      - name: Fetch signing certificate and profile
-        script: |
-          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
-          echo "$CM_CERTIFICATE" | base64 --decode > /tmp/cert.p12
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --private-key @file:/tmp/asc_key.p8 \
-            --create
-          keychain initialize
-          keychain add-certificates --certificate /tmp/cert.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
-
       - name: Install CocoaPods
         script: |
           ls apps/customer-app/ios/Podfile || { echo "ERROR: Podfile missing — prebuild failed"; exit 1; }
           export NODE_PATH="$PWD/node_modules:$PWD/apps/customer-app/node_modules"
           cd apps/customer-app/ios
           pod install --verbose 2>&1
+
+      - name: Fetch signing certificate and profile
+        script: |
+          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
+          echo "$CM_CERTIFICATE" | base64 --decode > /tmp/cert.p12
+          # Extract private key from P12 so fetch-signing-files can match cert to profile
+          openssl pkcs12 -in /tmp/cert.p12 -nocerts -nodes \
+            -passin pass:"$CM_CERTIFICATE_PASSWORD" -out /tmp/cert_key.pem 2>/dev/null \
+            || openssl pkcs12 -in /tmp/cert.p12 -nocerts -noenc \
+            -passin pass:"$CM_CERTIFICATE_PASSWORD" -out /tmp/cert_key.pem
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --certificate-key @file:/tmp/cert_key.pem \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --private-key @file:/tmp/asc_key.p8 \
+            --create
+          keychain initialize
+          keychain add-certificates --certificate /tmp/cert.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
 
       - name: Detect Xcode workspace
         script: |
@@ -663,25 +669,31 @@ workflows:
               raise SystemExit(1)
           PYEOF
 
-      - name: Fetch signing certificate and profile
-        script: |
-          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
-          echo "$CM_CERTIFICATE" | base64 --decode > /tmp/cert.p12
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --private-key @file:/tmp/asc_key.p8 \
-            --create
-          keychain initialize
-          keychain add-certificates --certificate /tmp/cert.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
-
       - name: Install CocoaPods
         script: |
           ls apps/driver-app/ios/Podfile || { echo "ERROR: Podfile missing — prebuild failed"; exit 1; }
           export NODE_PATH="$PWD/node_modules:$PWD/apps/driver-app/node_modules"
           cd apps/driver-app/ios
           pod install --verbose 2>&1
+
+      - name: Fetch signing certificate and profile
+        script: |
+          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
+          echo "$CM_CERTIFICATE" | base64 --decode > /tmp/cert.p12
+          # Extract private key from P12 so fetch-signing-files can match cert to profile
+          openssl pkcs12 -in /tmp/cert.p12 -nocerts -nodes \
+            -passin pass:"$CM_CERTIFICATE_PASSWORD" -out /tmp/cert_key.pem 2>/dev/null \
+            || openssl pkcs12 -in /tmp/cert.p12 -nocerts -noenc \
+            -passin pass:"$CM_CERTIFICATE_PASSWORD" -out /tmp/cert_key.pem
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --certificate-key @file:/tmp/cert_key.pem \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --private-key @file:/tmp/asc_key.p8 \
+            --create
+          keychain initialize
+          keychain add-certificates --certificate /tmp/cert.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
 
       - name: Detect Xcode workspace
         script: |

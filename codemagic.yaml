@@ -502,6 +502,9 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: in.transitco.customer
       groups:
         - transit_ios
         - transit_android
@@ -509,7 +512,6 @@ workflows:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
-        BUNDLE_ID: "in.transitco.customer"
       node: 20.17.0
       xcode: 16
       cocoapods: 1.15.2
@@ -551,8 +553,7 @@ workflows:
               f.write(content)
           print('✅ Podfile patched')
 
-          # 2. Fix React-jsinspector missing :modular_headers => true in react_native_pods.rb
-          # Glob finds @types/react-native copy first and breaks — use explicit paths instead
+          # 2. Fix React-jsinspector missing :modular_headers => true
           old = "pod 'React-jsinspector', :path => \"#{prefix}/ReactCommon/jsinspector-modern\""
           new = "pod 'React-jsinspector', :path => \"#{prefix}/ReactCommon/jsinspector-modern\", :modular_headers => true"
           candidates = [
@@ -562,7 +563,6 @@ workflows:
           patched = 0
           for path in candidates:
               if not os.path.exists(path):
-                  print(f'Not found (skip): {path}')
                   continue
               with open(path, 'r') as f:
                   c = f.read()
@@ -572,42 +572,25 @@ workflows:
                   print(f'✅ Patched: {path}')
                   patched += 1
               elif new in c:
-                  print(f'Already patched: {path}')
                   patched += 1
-              else:
-                  print(f'⚠️ Pattern not found in: {path}')
           if patched == 0:
-              print('❌ ERROR: react_native_pods.rb not patched')
-              raise SystemExit(1)
+              raise SystemExit('❌ react_native_pods.rb not patched')
           PYEOF
 
       - name: Install CocoaPods
         script: |
-          ls apps/customer-app/ios/Podfile || { echo "ERROR: Podfile missing — prebuild failed"; exit 1; }
+          ls apps/customer-app/ios/Podfile || { echo "ERROR: Podfile missing"; exit 1; }
           export NODE_PATH="$PWD/node_modules:$PWD/apps/customer-app/node_modules"
           cd apps/customer-app/ios
           pod install --verbose 2>&1
 
-      - name: Install signing files
-        script: |
-          printf '%s' "$CM_CERTIFICATE" > /tmp/cert_b64.txt
-          base64 -D -i /tmp/cert_b64.txt -o /tmp/cert.p12
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
-          printf '%s' "$CM_PROVISIONING_PROFILE" > /tmp/profile_b64.txt
-          base64 -D -i /tmp/profile_b64.txt \
-            -o ~/Library/MobileDevice/Provisioning\ Profiles/transit_customer.mobileprovision
-          keychain initialize
-          keychain add-certificates --certificate /tmp/cert.p12 \
-            --certificate-password "$CM_CERTIFICATE_PASSWORD"
-
       - name: Detect Xcode workspace
         script: |
           WS=$(find apps/customer-app/ios -name "*.xcworkspace" -maxdepth 2 | head -1)
-          if [ -z "$WS" ]; then echo "ERROR: No .xcworkspace found after pod install"; exit 1; fi
+          if [ -z "$WS" ]; then echo "ERROR: No .xcworkspace found"; exit 1; fi
           SCHEME=$(basename "$WS" .xcworkspace)
           echo "XCODE_WORKSPACE=$WS" >> $CM_ENV
           echo "XCODE_SCHEME=$SCHEME" >> $CM_ENV
-          echo "Workspace: $WS  Scheme: $SCHEME"
 
       - name: Set build number
         script: |
@@ -619,10 +602,13 @@ workflows:
           xcode-project use-profiles
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --config Release
 
       - name: Upload to TestFlight
         script: |
+          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
+          chmod 600 /tmp/asc_key.p8
           app-store-connect publish \
             --path "$(find build/ios/ipa -name '*.ipa' | head -1)" \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
@@ -645,6 +631,9 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: in.transitco.driver
       groups:
         - transit_ios
         - transit_android
@@ -652,7 +641,6 @@ workflows:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
-        BUNDLE_ID: "in.transitco.driver"
       node: 20.17.0
       xcode: 16
       cocoapods: 1.15.2
@@ -694,8 +682,7 @@ workflows:
               f.write(content)
           print('✅ Podfile patched')
 
-          # 2. Fix React-jsinspector missing :modular_headers => true in react_native_pods.rb
-          # Glob finds @types/react-native copy first and breaks — use explicit paths instead
+          # 2. Fix React-jsinspector missing :modular_headers => true
           old = "pod 'React-jsinspector', :path => \"#{prefix}/ReactCommon/jsinspector-modern\""
           new = "pod 'React-jsinspector', :path => \"#{prefix}/ReactCommon/jsinspector-modern\", :modular_headers => true"
           candidates = [
@@ -705,7 +692,6 @@ workflows:
           patched = 0
           for path in candidates:
               if not os.path.exists(path):
-                  print(f'Not found (skip): {path}')
                   continue
               with open(path, 'r') as f:
                   c = f.read()
@@ -715,42 +701,25 @@ workflows:
                   print(f'✅ Patched: {path}')
                   patched += 1
               elif new in c:
-                  print(f'Already patched: {path}')
                   patched += 1
-              else:
-                  print(f'⚠️ Pattern not found in: {path}')
           if patched == 0:
-              print('❌ ERROR: react_native_pods.rb not patched')
-              raise SystemExit(1)
+              raise SystemExit('❌ react_native_pods.rb not patched')
           PYEOF
 
       - name: Install CocoaPods
         script: |
-          ls apps/driver-app/ios/Podfile || { echo "ERROR: Podfile missing — prebuild failed"; exit 1; }
+          ls apps/driver-app/ios/Podfile || { echo "ERROR: Podfile missing"; exit 1; }
           export NODE_PATH="$PWD/node_modules:$PWD/apps/driver-app/node_modules"
           cd apps/driver-app/ios
           pod install --verbose 2>&1
 
-      - name: Install signing files
-        script: |
-          printf '%s' "$CM_CERTIFICATE" > /tmp/cert_b64.txt
-          base64 -D -i /tmp/cert_b64.txt -o /tmp/cert.p12
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
-          printf '%s' "$CM_PROVISIONING_PROFILE_DRIVER" > /tmp/profile_b64.txt
-          base64 -D -i /tmp/profile_b64.txt \
-            -o ~/Library/MobileDevice/Provisioning\ Profiles/transit_driver.mobileprovision
-          keychain initialize
-          keychain add-certificates --certificate /tmp/cert.p12 \
-            --certificate-password "$CM_CERTIFICATE_PASSWORD"
-
       - name: Detect Xcode workspace
         script: |
           WS=$(find apps/driver-app/ios -name "*.xcworkspace" -maxdepth 2 | head -1)
-          if [ -z "$WS" ]; then echo "ERROR: No .xcworkspace found after pod install"; exit 1; fi
+          if [ -z "$WS" ]; then echo "ERROR: No .xcworkspace found"; exit 1; fi
           SCHEME=$(basename "$WS" .xcworkspace)
           echo "XCODE_WORKSPACE=$WS" >> $CM_ENV
           echo "XCODE_SCHEME=$SCHEME" >> $CM_ENV
-          echo "Workspace: $WS  Scheme: $SCHEME"
 
       - name: Set build number
         script: |
@@ -762,10 +731,13 @@ workflows:
           xcode-project use-profiles
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --config Release
 
       - name: Upload to TestFlight
         script: |
+          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
+          chmod 600 /tmp/asc_key.p8
           app-store-connect publish \
             --path "$(find build/ios/ipa -name '*.ipa' | head -1)" \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \

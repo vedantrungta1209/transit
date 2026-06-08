@@ -315,6 +315,37 @@ workflows:
           cd apps/customer-app/android
           ./gradlew bundleRelease -PreactNativeArchitectures=arm64-v8a,armeabi-v7a --stacktrace 2>&1
 
+      - name: Upload to Play Store (internal)
+        script: |
+          echo "$GPLAY_SA_JSON" > /tmp/gplay_key.json
+          pip install google-auth google-api-python-client --quiet
+          python3 - <<'EOF'
+          import glob
+          from googleapiclient.discovery import build
+          from google.oauth2 import service_account
+
+          creds = service_account.Credentials.from_service_account_file(
+              '/tmp/gplay_key.json',
+              scopes=['https://www.googleapis.com/auth/androidpublisher']
+          )
+          service = build('androidpublisher', 'v3', credentials=creds)
+          package = 'in.transitco.customer'
+          edit = service.edits().insert(body={}, packageName=package).execute()
+          edit_id = edit['id']
+          aab = glob.glob('apps/customer-app/android/app/build/outputs/**/*.aab', recursive=True)[0]
+          with open(aab, 'rb') as f:
+              service.edits().bundles().upload(
+                  packageName=package, editId=edit_id,
+                  media_body=aab, media_mime_type='application/octet-stream'
+              ).execute()
+          service.edits().tracks().update(
+              packageName=package, editId=edit_id, track='internal',
+              body={'releases': [{'status': 'completed', 'releaseNotes': []}]}
+          ).execute()
+          service.edits().commit(packageName=package, editId=edit_id).execute()
+          print('✅ Published to Play Store internal track')
+          EOF
+
     artifacts:
       - apps/customer-app/android/app/build/outputs/bundle/release/*.aab
       - apps/customer-app/android/app/build/outputs/**/mapping.txt
@@ -424,6 +455,37 @@ workflows:
           export NODE_PATH="$PWD/node_modules:$PWD/apps/driver-app/node_modules"
           cd apps/driver-app/android
           ./gradlew bundleRelease -PreactNativeArchitectures=arm64-v8a,armeabi-v7a --stacktrace 2>&1
+
+      - name: Upload to Play Store (internal)
+        script: |
+          echo "$GPLAY_SA_JSON" > /tmp/gplay_key.json
+          pip install google-auth google-api-python-client --quiet
+          python3 - <<'EOF'
+          import glob
+          from googleapiclient.discovery import build
+          from google.oauth2 import service_account
+
+          creds = service_account.Credentials.from_service_account_file(
+              '/tmp/gplay_key.json',
+              scopes=['https://www.googleapis.com/auth/androidpublisher']
+          )
+          service = build('androidpublisher', 'v3', credentials=creds)
+          package = 'in.transitco.driver'
+          edit = service.edits().insert(body={}, packageName=package).execute()
+          edit_id = edit['id']
+          aab = glob.glob('apps/driver-app/android/app/build/outputs/**/*.aab', recursive=True)[0]
+          with open(aab, 'rb') as f:
+              service.edits().bundles().upload(
+                  packageName=package, editId=edit_id,
+                  media_body=aab, media_mime_type='application/octet-stream'
+              ).execute()
+          service.edits().tracks().update(
+              packageName=package, editId=edit_id, track='internal',
+              body={'releases': [{'status': 'completed', 'releaseNotes': []}]}
+          ).execute()
+          service.edits().commit(packageName=package, editId=edit_id).execute()
+          print('✅ Published to Play Store internal track')
+          EOF
 
     artifacts:
       - apps/driver-app/android/app/build/outputs/bundle/release/*.aab

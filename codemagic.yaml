@@ -603,6 +603,7 @@ workflows:
 
       - name: Build IPA
         script: |
+          export EXPO_ROUTER_APP_ROOT="$PWD/apps/customer-app/app"
           xcode-project use-profiles
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
@@ -732,6 +733,7 @@ workflows:
 
       - name: Build IPA
         script: |
+          export EXPO_ROUTER_APP_ROOT="$PWD/apps/driver-app/app"
           xcode-project use-profiles
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \

@@ -216,7 +216,7 @@ workflows:
   # ─────────────────────────────────────────────────────────────────────────────
   transit-customer-android-prod:
     name: Transit Customer — Android AAB (Play Store)
-    max_build_duration: 60
+    max_build_duration: 90
     instance_type: mac_mini_m2
 
     environment:
@@ -322,6 +322,7 @@ workflows:
           python3 - <<'EOF'
           import glob
           from googleapiclient.discovery import build
+          from googleapiclient.http import MediaFileUpload
           from google.oauth2 import service_account
 
           creds = service_account.Credentials.from_service_account_file(
@@ -333,11 +334,12 @@ workflows:
           edit = service.edits().insert(body={}, packageName=package).execute()
           edit_id = edit['id']
           aab = glob.glob('apps/customer-app/android/app/build/outputs/**/*.aab', recursive=True)[0]
-          with open(aab, 'rb') as f:
-              service.edits().bundles().upload(
-                  packageName=package, editId=edit_id,
-                  media_body=aab, media_mime_type='application/octet-stream'
-              ).execute()
+          print(f'Uploading {aab}')
+          media = MediaFileUpload(aab, mimetype='application/octet-stream', resumable=True)
+          service.edits().bundles().upload(
+              packageName=package, editId=edit_id,
+              media_body=media
+          ).execute()
           service.edits().tracks().update(
               packageName=package, editId=edit_id, track='internal',
               body={'releases': [{'status': 'completed', 'releaseNotes': []}]}
@@ -357,7 +359,7 @@ workflows:
   # ─────────────────────────────────────────────────────────────────────────────
   transit-driver-android-prod:
     name: Transit Driver — Android AAB (Play Store)
-    max_build_duration: 60
+    max_build_duration: 90
     instance_type: mac_mini_m2
 
     environment:
@@ -463,6 +465,7 @@ workflows:
           python3 - <<'EOF'
           import glob
           from googleapiclient.discovery import build
+          from googleapiclient.http import MediaFileUpload
           from google.oauth2 import service_account
 
           creds = service_account.Credentials.from_service_account_file(
@@ -474,11 +477,12 @@ workflows:
           edit = service.edits().insert(body={}, packageName=package).execute()
           edit_id = edit['id']
           aab = glob.glob('apps/driver-app/android/app/build/outputs/**/*.aab', recursive=True)[0]
-          with open(aab, 'rb') as f:
-              service.edits().bundles().upload(
-                  packageName=package, editId=edit_id,
-                  media_body=aab, media_mime_type='application/octet-stream'
-              ).execute()
+          print(f'Uploading {aab}')
+          media = MediaFileUpload(aab, mimetype='application/octet-stream', resumable=True)
+          service.edits().bundles().upload(
+              packageName=package, editId=edit_id,
+              media_body=media
+          ).execute()
           service.edits().tracks().update(
               packageName=package, editId=edit_id, track='internal',
               body={'releases': [{'status': 'completed', 'releaseNotes': []}]}

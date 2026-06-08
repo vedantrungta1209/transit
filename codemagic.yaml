@@ -528,10 +528,12 @@ workflows:
 
       - name: Install signing files
         script: |
-          echo "$CM_CERTIFICATE" | base64 --decode > /tmp/cert.p12
+          printf '%s' "$CM_CERTIFICATE" > /tmp/cert_b64.txt
+          base64 -D -i /tmp/cert_b64.txt -o /tmp/cert.p12
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
-          echo "$CM_PROVISIONING_PROFILE" | base64 --decode \
-            > ~/Library/MobileDevice/Provisioning\ Profiles/transit_customer.mobileprovision
+          printf '%s' "$CM_PROVISIONING_PROFILE" > /tmp/profile_b64.txt
+          base64 -D -i /tmp/profile_b64.txt \
+            -o ~/Library/MobileDevice/Provisioning\ Profiles/transit_customer.mobileprovision
           keychain initialize
           keychain add-certificates --certificate /tmp/cert.p12 \
             --certificate-password "$CM_CERTIFICATE_PASSWORD"
@@ -669,10 +671,12 @@ workflows:
 
       - name: Install signing files
         script: |
-          echo "$CM_CERTIFICATE" | base64 --decode > /tmp/cert.p12
+          printf '%s' "$CM_CERTIFICATE" > /tmp/cert_b64.txt
+          base64 -D -i /tmp/cert_b64.txt -o /tmp/cert.p12
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
-          echo "$CM_PROVISIONING_PROFILE_DRIVER" | base64 --decode \
-            > ~/Library/MobileDevice/Provisioning\ Profiles/transit_driver.mobileprovision
+          printf '%s' "$CM_PROVISIONING_PROFILE_DRIVER" > /tmp/profile_b64.txt
+          base64 -D -i /tmp/profile_b64.txt \
+            -o ~/Library/MobileDevice/Provisioning\ Profiles/transit_driver.mobileprovision
           keychain initialize
           keychain add-certificates --certificate /tmp/cert.p12 \
             --certificate-password "$CM_CERTIFICATE_PASSWORD"

@@ -526,25 +526,15 @@ workflows:
           cd apps/customer-app/ios
           pod install --verbose 2>&1
 
-      - name: Fetch signing certificate and profile
+      - name: Install signing files
         script: |
-          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
           echo "$CM_CERTIFICATE" | base64 --decode > /tmp/cert.p12
-          # Extract private key from P12 so fetch-signing-files can match cert to profile
-          openssl pkcs12 -in /tmp/cert.p12 -nocerts -nodes \
-            -passin pass:"$CM_CERTIFICATE_PASSWORD" -out /tmp/cert_key.pem 2>/dev/null \
-            || openssl pkcs12 -in /tmp/cert.p12 -nocerts -noenc \
-            -passin pass:"$CM_CERTIFICATE_PASSWORD" -out /tmp/cert_key.pem
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --certificate-key @file:/tmp/cert_key.pem \
-            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --private-key @file:/tmp/asc_key.p8 \
-            --create \
-            --save
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
+          echo "$CM_PROVISIONING_PROFILE" | base64 --decode \
+            > ~/Library/MobileDevice/Provisioning\ Profiles/transit_customer.mobileprovision
           keychain initialize
-          keychain add-certificates --certificate /tmp/cert.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
+          keychain add-certificates --certificate /tmp/cert.p12 \
+            --certificate-password "$CM_CERTIFICATE_PASSWORD"
 
       - name: Detect Xcode workspace
         script: |
@@ -677,25 +667,15 @@ workflows:
           cd apps/driver-app/ios
           pod install --verbose 2>&1
 
-      - name: Fetch signing certificate and profile
+      - name: Install signing files
         script: |
-          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
           echo "$CM_CERTIFICATE" | base64 --decode > /tmp/cert.p12
-          # Extract private key from P12 so fetch-signing-files can match cert to profile
-          openssl pkcs12 -in /tmp/cert.p12 -nocerts -nodes \
-            -passin pass:"$CM_CERTIFICATE_PASSWORD" -out /tmp/cert_key.pem 2>/dev/null \
-            || openssl pkcs12 -in /tmp/cert.p12 -nocerts -noenc \
-            -passin pass:"$CM_CERTIFICATE_PASSWORD" -out /tmp/cert_key.pem
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --certificate-key @file:/tmp/cert_key.pem \
-            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --private-key @file:/tmp/asc_key.p8 \
-            --create \
-            --save
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
+          echo "$CM_PROVISIONING_PROFILE_DRIVER" | base64 --decode \
+            > ~/Library/MobileDevice/Provisioning\ Profiles/transit_driver.mobileprovision
           keychain initialize
-          keychain add-certificates --certificate /tmp/cert.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
+          keychain add-certificates --certificate /tmp/cert.p12 \
+            --certificate-password "$CM_CERTIFICATE_PASSWORD"
 
       - name: Detect Xcode workspace
         script: |

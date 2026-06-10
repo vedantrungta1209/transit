@@ -548,27 +548,6 @@ workflows:
           cd apps/customer-app
           npx expo prebuild --platform ios --clean --non-interactive
 
-      - name: Set EXPO_ROUTER_APP_ROOT
-        script: |
-          python3 << 'PYEOF'
-          import glob
-
-          pbxproj = (
-              glob.glob('apps/customer-app/ios/*.xcodeproj/project.pbxproj') or
-              glob.glob('apps/customer-app/ios/**/*.pbxproj', recursive=True)
-          )[0]
-          with open(pbxproj, 'r') as f:
-              content = f.read()
-          setting = '\t\t\t\tEXPO_ROUTER_APP_ROOT = "$(SRCROOT)/../app";\n'
-          if setting not in content:
-              patched = content.replace('buildSettings = {\n', 'buildSettings = {\n' + setting)
-              with open(pbxproj, 'w') as f:
-                  f.write(patched)
-              print('✅ Injected EXPO_ROUTER_APP_ROOT into Xcode build settings')
-          else:
-              print('ℹ️ Already present')
-          PYEOF
-
       - name: Patch Podfile and react_native_pods.rb
         script: |
           perl -i -0pe 's/,\s*\n\s*:privacy_file_aggregation_enabled\s*=>[^\n]*//g' apps/customer-app/ios/Podfile
@@ -698,27 +677,6 @@ workflows:
         script: |
           cd apps/driver-app
           npx expo prebuild --platform ios --clean --non-interactive
-
-      - name: Set EXPO_ROUTER_APP_ROOT
-        script: |
-          python3 << 'PYEOF'
-          import glob
-
-          pbxproj = (
-              glob.glob('apps/driver-app/ios/*.xcodeproj/project.pbxproj') or
-              glob.glob('apps/driver-app/ios/**/*.pbxproj', recursive=True)
-          )[0]
-          with open(pbxproj, 'r') as f:
-              content = f.read()
-          setting = '\t\t\t\tEXPO_ROUTER_APP_ROOT = "$(SRCROOT)/../app";\n'
-          if setting not in content:
-              patched = content.replace('buildSettings = {\n', 'buildSettings = {\n' + setting)
-              with open(pbxproj, 'w') as f:
-                  f.write(patched)
-              print('✅ Injected EXPO_ROUTER_APP_ROOT into Xcode build settings')
-          else:
-              print('ℹ️ Already present')
-          PYEOF
 
       - name: Patch Podfile and react_native_pods.rb
         script: |

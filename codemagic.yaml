@@ -604,7 +604,7 @@ workflows:
 
       - name: Detect Xcode workspace
         script: |
-          WS=$(find apps/customer-app/ios -name "*.xcworkspace" -maxdepth 2 | head -1)
+          WS=$(find apps/customer-app/ios -name "*.xcworkspace" -maxdepth 2 ! -path "*.xcodeproj/*" | head -1)
           if [ -z "$WS" ]; then echo "ERROR: No .xcworkspace found"; exit 1; fi
           SCHEME=$(basename "$WS" .xcworkspace)
           echo "XCODE_WORKSPACE=$WS" >> $CM_ENV
@@ -738,7 +738,7 @@ workflows:
 
       - name: Detect Xcode workspace
         script: |
-          WS=$(find apps/driver-app/ios -name "*.xcworkspace" -maxdepth 2 | head -1)
+          WS=$(find apps/driver-app/ios -name "*.xcworkspace" -maxdepth 2 ! -path "*.xcodeproj/*" | head -1)
           if [ -z "$WS" ]; then echo "ERROR: No .xcworkspace found"; exit 1; fi
           SCHEME=$(basename "$WS" .xcworkspace)
           echo "XCODE_WORKSPACE=$WS" >> $CM_ENV

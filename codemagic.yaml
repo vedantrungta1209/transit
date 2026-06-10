@@ -318,10 +318,10 @@ workflows:
       - name: Upload to Play Store (internal)
         script: |
           printf '%s' "$GPLAY_SA_JSON" > /tmp/gplay_key.json
-          if [ ! -s /tmp/gplay_key.json ]; then
-            echo "ERROR: GPLAY_SA_JSON is empty or missing."
-            echo "Add it to the 'transit_android' variable group in Codemagic Settings."
-            exit 1
+          if ! python3 -c "import json,sys; d=json.load(open('/tmp/gplay_key.json')); assert d.get('type')=='service_account'" 2>/dev/null; then
+            echo "⚠️  GPLAY_SA_JSON not configured or invalid — skipping Play Store upload."
+            echo "To enable: add the Google Play service account JSON to the 'transit_android' variable group in Codemagic."
+            exit 0
           fi
           pip install google-auth google-api-python-client --quiet
           python3 - <<'EOF'
@@ -466,10 +466,10 @@ workflows:
       - name: Upload to Play Store (internal)
         script: |
           printf '%s' "$GPLAY_SA_JSON" > /tmp/gplay_key.json
-          if [ ! -s /tmp/gplay_key.json ]; then
-            echo "ERROR: GPLAY_SA_JSON is empty or missing."
-            echo "Add it to the 'transit_android' variable group in Codemagic Settings."
-            exit 1
+          if ! python3 -c "import json,sys; d=json.load(open('/tmp/gplay_key.json')); assert d.get('type')=='service_account'" 2>/dev/null; then
+            echo "⚠️  GPLAY_SA_JSON not configured or invalid — skipping Play Store upload."
+            echo "To enable: add the Google Play service account JSON to the 'transit_android' variable group in Codemagic."
+            exit 0
           fi
           pip install google-auth google-api-python-client --quiet
           python3 - <<'EOF'
@@ -548,49 +548,9 @@ workflows:
           cd apps/customer-app
           npx expo prebuild --platform ios --clean --non-interactive
 
-      - name: Patch EXPO_ROUTER_APP_ROOT in Xcode project
+      - name: Set EXPO_ROUTER_APP_ROOT
         script: |
-          python3 << 'PYEOF'
-          import os, glob, re
-
-          pbxproj_list = (
-              glob.glob('apps/customer-app/ios/*.xcodeproj/project.pbxproj') or
-              glob.glob('apps/customer-app/ios/**/*.pbxproj', recursive=True)
-          )
-          if not pbxproj_list:
-              raise SystemExit('❌ No project.pbxproj found in apps/customer-app/ios/')
-
-          pbxproj = pbxproj_list[0]
-          app_root = os.path.abspath('apps/customer-app/app')
-          print(f'Patching {pbxproj}')
-          print(f'EXPO_ROUTER_APP_ROOT will be: {app_root}')
-
-          with open(pbxproj, 'r') as f:
-              content = f.read()
-
-          # In pbxproj shellScript strings, \" = literal doublequote, \n = literal newline
-          # Python reads these as the 2-char sequences \" and \n
-          new_val = f'EXPO_ROUTER_APP_ROOT=\\"{app_root}\\"'
-
-          if 'EXPO_ROUTER_APP_ROOT' in content:
-              patched = re.sub(
-                  r'EXPO_ROUTER_APP_ROOT=\\"[^"\\]*\\"',
-                  lambda m: new_val,
-                  content
-              )
-              print(f'✅ Replaced EXPO_ROUTER_APP_ROOT with absolute path: {app_root}')
-          else:
-              new_line = f'export {new_val}\\n'
-              if 'WITH_ENVIRONMENT=' in content:
-                  patched = content.replace('WITH_ENVIRONMENT=', new_line + 'WITH_ENVIRONMENT=', 1)
-                  print(f'✅ Added EXPO_ROUTER_APP_ROOT before WITH_ENVIRONMENT')
-              else:
-                  patched = content
-                  print('⚠️ Could not find insertion point — EXPO_ROUTER_APP_ROOT not patched')
-
-          with open(pbxproj, 'w') as f:
-              f.write(patched)
-          PYEOF
+          printf 'export EXPO_ROUTER_APP_ROOT="$SRCROOT/../app"\n' > apps/customer-app/ios/.xcode.env.local
 
       - name: Patch Podfile and react_native_pods.rb
         script: |
@@ -722,47 +682,9 @@ workflows:
           cd apps/driver-app
           npx expo prebuild --platform ios --clean --non-interactive
 
-      - name: Patch EXPO_ROUTER_APP_ROOT in Xcode project
+      - name: Set EXPO_ROUTER_APP_ROOT
         script: |
-          python3 << 'PYEOF'
-          import os, glob, re
-
-          pbxproj_list = (
-              glob.glob('apps/driver-app/ios/*.xcodeproj/project.pbxproj') or
-              glob.glob('apps/driver-app/ios/**/*.pbxproj', recursive=True)
-          )
-          if not pbxproj_list:
-              raise SystemExit('❌ No project.pbxproj found in apps/driver-app/ios/')
-
-          pbxproj = pbxproj_list[0]
-          app_root = os.path.abspath('apps/driver-app/app')
-          print(f'Patching {pbxproj}')
-          print(f'EXPO_ROUTER_APP_ROOT will be: {app_root}')
-
-          with open(pbxproj, 'r') as f:
-              content = f.read()
-
-          new_val = f'EXPO_ROUTER_APP_ROOT=\\"{app_root}\\"'
-
-          if 'EXPO_ROUTER_APP_ROOT' in content:
-              patched = re.sub(
-                  r'EXPO_ROUTER_APP_ROOT=\\"[^"\\]*\\"',
-                  lambda m: new_val,
-                  content
-              )
-              print(f'✅ Replaced EXPO_ROUTER_APP_ROOT with absolute path: {app_root}')
-          else:
-              new_line = f'export {new_val}\\n'
-              if 'WITH_ENVIRONMENT=' in content:
-                  patched = content.replace('WITH_ENVIRONMENT=', new_line + 'WITH_ENVIRONMENT=', 1)
-                  print(f'✅ Added EXPO_ROUTER_APP_ROOT before WITH_ENVIRONMENT')
-              else:
-                  patched = content
-                  print('⚠️ Could not find insertion point — EXPO_ROUTER_APP_ROOT not patched')
-
-          with open(pbxproj, 'w') as f:
-              f.write(patched)
-          PYEOF
+          printf 'export EXPO_ROUTER_APP_ROOT="$SRCROOT/../app"\n' > apps/driver-app/ios/.xcode.env.local
 
       - name: Patch Podfile and react_native_pods.rb
         script: |

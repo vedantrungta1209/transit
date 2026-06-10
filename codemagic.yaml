@@ -550,7 +550,24 @@ workflows:
 
       - name: Set EXPO_ROUTER_APP_ROOT
         script: |
-          printf 'export EXPO_ROUTER_APP_ROOT="$SRCROOT/../app"\n' > apps/customer-app/ios/.xcode.env.local
+          python3 << 'PYEOF'
+          import glob
+
+          pbxproj = (
+              glob.glob('apps/customer-app/ios/*.xcodeproj/project.pbxproj') or
+              glob.glob('apps/customer-app/ios/**/*.pbxproj', recursive=True)
+          )[0]
+          with open(pbxproj, 'r') as f:
+              content = f.read()
+          setting = '\t\t\t\tEXPO_ROUTER_APP_ROOT = "$(SRCROOT)/../app";\n'
+          if setting not in content:
+              patched = content.replace('buildSettings = {\n', 'buildSettings = {\n' + setting)
+              with open(pbxproj, 'w') as f:
+                  f.write(patched)
+              print('✅ Injected EXPO_ROUTER_APP_ROOT into Xcode build settings')
+          else:
+              print('ℹ️ Already present')
+          PYEOF
 
       - name: Patch Podfile and react_native_pods.rb
         script: |
@@ -684,7 +701,24 @@ workflows:
 
       - name: Set EXPO_ROUTER_APP_ROOT
         script: |
-          printf 'export EXPO_ROUTER_APP_ROOT="$SRCROOT/../app"\n' > apps/driver-app/ios/.xcode.env.local
+          python3 << 'PYEOF'
+          import glob
+
+          pbxproj = (
+              glob.glob('apps/driver-app/ios/*.xcodeproj/project.pbxproj') or
+              glob.glob('apps/driver-app/ios/**/*.pbxproj', recursive=True)
+          )[0]
+          with open(pbxproj, 'r') as f:
+              content = f.read()
+          setting = '\t\t\t\tEXPO_ROUTER_APP_ROOT = "$(SRCROOT)/../app";\n'
+          if setting not in content:
+              patched = content.replace('buildSettings = {\n', 'buildSettings = {\n' + setting)
+              with open(pbxproj, 'w') as f:
+                  f.write(patched)
+              print('✅ Injected EXPO_ROUTER_APP_ROOT into Xcode build settings')
+          else:
+              print('ℹ️ Already present')
+          PYEOF
 
       - name: Patch Podfile and react_native_pods.rb
         script: |

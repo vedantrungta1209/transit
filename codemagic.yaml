@@ -599,6 +599,10 @@ workflows:
               '    t.build_configurations.each do |c|\n'
               "      min = c.build_settings['IPHONEOS_DEPLOYMENT_TARGET']\n"
               '      c.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'13.4\' if min.to_f < 13.4\n'
+              "      if t.name == 'react-native-razorpay'\n"
+              "        c.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'\n"
+              "        c.build_settings['OTHER_CFLAGS'] = '$(inherited) -Wno-deprecated-declarations'\n"
+              "      end\n"
               '    end\n'
               '  end\n'
           )
@@ -607,7 +611,7 @@ workflows:
               content = content.replace(marker, marker + dt_fix, 1)
               with open('apps/customer-app/ios/Podfile', 'w') as f:
                   f.write(content)
-              print('✅ Deployment target fix injected into post_install')
+              print('✅ Deployment target + razorpay warning fix injected into post_install')
           else:
               print('ℹ️ post_install already patched or marker not found')
           PYEOF
@@ -750,6 +754,10 @@ workflows:
               '    t.build_configurations.each do |c|\n'
               "      min = c.build_settings['IPHONEOS_DEPLOYMENT_TARGET']\n"
               '      c.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'13.4\' if min.to_f < 13.4\n'
+              "      if t.name == 'react-native-razorpay'\n"
+              "        c.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'\n"
+              "        c.build_settings['OTHER_CFLAGS'] = '$(inherited) -Wno-deprecated-declarations'\n"
+              "      end\n"
               '    end\n'
               '  end\n'
           )
@@ -758,7 +766,7 @@ workflows:
               content = content.replace(marker, marker + dt_fix, 1)
               with open('apps/driver-app/ios/Podfile', 'w') as f:
                   f.write(content)
-              print('✅ Deployment target fix injected into post_install')
+              print('✅ Deployment target + razorpay warning fix injected into post_install')
           else:
               print('ℹ️ post_install already patched or marker not found')
           PYEOF

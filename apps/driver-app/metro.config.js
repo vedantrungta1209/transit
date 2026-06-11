@@ -10,6 +10,8 @@ if (!path.isAbsolute(process.env.EXPO_ROUTER_APP_ROOT || '')) {
 
 const config = getDefaultConfig(projectRoot);
 
+config.watchFolders = [workspaceRoot];
+
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),

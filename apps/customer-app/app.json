@@ -40,7 +40,8 @@
           "locationWhenInUsePermission": "Transit needs your location to find rides nearby."
         }
       ],
-      "./plugins/withRazorpayMaven"
+      "./plugins/withRazorpayMaven",
+      "./plugins/withIosPodfilePatches"
     ],
     "scheme": "transit",
     "extra": {

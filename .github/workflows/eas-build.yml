@@ -1,0 +1,111 @@
+name: EAS Build
+
+# Replaces Codemagic for all native builds (iOS + Android).
+# Actual compilation runs on EAS servers — this workflow just submits the job.
+# Secrets required in GitHub repo settings:
+#   EXPO_TOKEN  — from expo.dev → Account Settings → Access Tokens
+#
+# Tag conventions (same as before):
+#   customer-preview-v*  → Customer APK  (Android sideload / internal testing)
+#   customer-v*          → Customer iOS (TestFlight) + Android AAB (Play Store internal)
+#   driver-preview-v*    → Driver APK    (Android sideload / internal testing)
+#   driver-v*            → Driver iOS (TestFlight) + Android AAB (Play Store internal)
+
+on:
+  push:
+    tags:
+      - 'customer-v*'
+      - 'customer-preview-v*'
+      - 'driver-v*'
+      - 'driver-preview-v*'
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # Customer app
+  # ───────────────────────────────────────────────────────────────────────────
+  build-customer-preview:
+    name: Customer — Android APK (preview)
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref_name, 'customer-preview-')
+    defaults:
+      run:
+        working-directory: apps/customer-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.17.0'
+      - name: Install dependencies (monorepo root)
+        run: cd ../.. && npm install
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@latest
+      - name: Build Android APK
+        run: eas build --profile preview --platform android --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+  build-customer-production:
+    name: Customer — iOS + Android AAB (production)
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref_name, 'customer-v') && !startsWith(github.ref_name, 'customer-preview-')
+    defaults:
+      run:
+        working-directory: apps/customer-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.17.0'
+      - name: Install dependencies (monorepo root)
+        run: cd ../.. && npm install
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@latest
+      - name: Build iOS + Android
+        run: eas build --profile production --platform all --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Driver app
+  # ───────────────────────────────────────────────────────────────────────────
+  build-driver-preview:
+    name: Driver — Android APK (preview)
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref_name, 'driver-preview-')
+    defaults:
+      run:
+        working-directory: apps/driver-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.17.0'
+      - name: Install dependencies (monorepo root)
+        run: cd ../.. && npm install
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@latest
+      - name: Build Android APK
+        run: eas build --profile preview --platform android --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+  build-driver-production:
+    name: Driver — iOS + Android AAB (production)
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref_name, 'driver-v') && !startsWith(github.ref_name, 'driver-preview-')
+    defaults:
+      run:
+        working-directory: apps/driver-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.17.0'
+      - name: Install dependencies (monorepo root)
+        run: cd ../.. && npm install
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@latest
+      - name: Build iOS + Android
+        run: eas build --profile production --platform all --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

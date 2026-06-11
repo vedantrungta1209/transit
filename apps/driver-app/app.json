@@ -41,7 +41,8 @@
           "locationAlwaysAndWhenInUsePermission": "Transit needs your location to match you with nearby riders."
         }
       ],
-      "./plugins/withRazorpayMaven"
+      "./plugins/withRazorpayMaven",
+      "./plugins/withIosPodfilePatches"
     ],
     "scheme": "transit-driver",
     "extra": {

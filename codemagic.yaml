@@ -638,7 +638,11 @@ workflows:
 
       - name: Build IPA
         script: |
-          export EXPO_ROUTER_APP_ROOT="$PWD/apps/customer-app/app"
+          # expo export:embed (unlike react-native bundle) passes customTransformOptions.routerRoot
+          # to Metro, which is required by babel-preset-expo's expoRouterBabelPlugin to replace
+          # process.env.EXPO_ROUTER_APP_ROOT with a string literal for require.context in _ctx.ios.js
+          export BUNDLE_COMMAND="export:embed"
+          export CLI_PATH="$PWD/node_modules/expo/bin/cli"
           xcode-project use-profiles
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
@@ -788,7 +792,11 @@ workflows:
 
       - name: Build IPA
         script: |
-          export EXPO_ROUTER_APP_ROOT="$PWD/apps/driver-app/app"
+          # expo export:embed (unlike react-native bundle) passes customTransformOptions.routerRoot
+          # to Metro, which is required by babel-preset-expo's expoRouterBabelPlugin to replace
+          # process.env.EXPO_ROUTER_APP_ROOT with a string literal for require.context in _ctx.ios.js
+          export BUNDLE_COMMAND="export:embed"
+          export CLI_PATH="$PWD/node_modules/expo/bin/cli"
           xcode-project use-profiles
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \

@@ -554,13 +554,13 @@ workflows:
           python3 << 'PYEOF'
           import os
 
-          # 1. Add razorpay-pod from GitHub (CDN is unreachable on CI)
+          # 1. Add razorpay-pod from GitHub pinned to stable tag (CDN is unreachable on CI)
           with open('apps/customer-app/ios/Podfile', 'r') as f:
               content = f.read()
           if 'razorpay-pod' not in content:
               content = content.replace(
                   "target 'Transit' do",
-                  "target 'Transit' do\n  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git'",
+                  "target 'Transit' do\n  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git', :tag => '1.3.10'",
                   1
               )
           with open('apps/customer-app/ios/Podfile', 'w') as f:
@@ -589,6 +589,27 @@ workflows:
                   patched += 1
           if patched == 0:
               raise SystemExit('❌ react_native_pods.rb not patched')
+
+          # 3. Inject deployment-target fix into post_install so Xcode 16 doesn't
+          #    error on pods that still declare iOS 10/11 as their minimum target.
+          with open('apps/customer-app/ios/Podfile', 'r') as f:
+              content = f.read()
+          dt_fix = (
+              '  installer.pods_project.targets.each do |t|\n'
+              '    t.build_configurations.each do |c|\n'
+              "      min = c.build_settings['IPHONEOS_DEPLOYMENT_TARGET']\n"
+              '      c.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'13.4\' if min.to_f < 13.4\n'
+              '    end\n'
+              '  end\n'
+          )
+          marker = 'post_install do |installer|\n'
+          if marker in content and dt_fix not in content:
+              content = content.replace(marker, marker + dt_fix, 1)
+              with open('apps/customer-app/ios/Podfile', 'w') as f:
+                  f.write(content)
+              print('✅ Deployment target fix injected into post_install')
+          else:
+              print('ℹ️ post_install already patched or marker not found')
           PYEOF
 
       - name: Install CocoaPods
@@ -684,13 +705,13 @@ workflows:
           python3 << 'PYEOF'
           import os
 
-          # 1. Add razorpay-pod from GitHub (CDN is unreachable on CI)
+          # 1. Add razorpay-pod from GitHub pinned to stable tag (CDN is unreachable on CI)
           with open('apps/driver-app/ios/Podfile', 'r') as f:
               content = f.read()
           if 'razorpay-pod' not in content:
               content = content.replace(
                   "target 'Transit Driver' do",
-                  "target 'Transit Driver' do\n  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git'",
+                  "target 'Transit Driver' do\n  pod 'razorpay-pod', :git => 'https://github.com/razorpay/razorpay-pod.git', :tag => '1.3.10'",
                   1
               )
           with open('apps/driver-app/ios/Podfile', 'w') as f:
@@ -719,6 +740,27 @@ workflows:
                   patched += 1
           if patched == 0:
               raise SystemExit('❌ react_native_pods.rb not patched')
+
+          # 3. Inject deployment-target fix into post_install so Xcode 16 doesn't
+          #    error on pods that still declare iOS 10/11 as their minimum target.
+          with open('apps/driver-app/ios/Podfile', 'r') as f:
+              content = f.read()
+          dt_fix = (
+              '  installer.pods_project.targets.each do |t|\n'
+              '    t.build_configurations.each do |c|\n'
+              "      min = c.build_settings['IPHONEOS_DEPLOYMENT_TARGET']\n"
+              '      c.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'13.4\' if min.to_f < 13.4\n'
+              '    end\n'
+              '  end\n'
+          )
+          marker = 'post_install do |installer|\n'
+          if marker in content and dt_fix not in content:
+              content = content.replace(marker, marker + dt_fix, 1)
+              with open('apps/driver-app/ios/Podfile', 'w') as f:
+                  f.write(content)
+              print('✅ Deployment target fix injected into post_install')
+          else:
+              print('ℹ️ post_install already patched or marker not found')
           PYEOF
 
       - name: Install CocoaPods

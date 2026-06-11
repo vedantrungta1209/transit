@@ -2,15 +2,20 @@ const { withDangerousMod } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
-// Applies three iOS-specific patches that can't be done via normal config plugins:
+// Applies four iOS-specific patches that can't be done via normal config plugins:
 //
-// 1. react_native_pods.rb — adds :modular_headers => true to React-jsinspector so
+// 1. .xcode.env.local — sets BUNDLE_COMMAND=export:embed and CLI_PATH so Xcode
+//    uses `expo export:embed` instead of `react-native bundle`. Required for
+//    expo-router in a monorepo where expo is hoisted to the workspace root rather
+//    than the app's own node_modules (EAS Build doesn't auto-detect this).
+//
+// 2. react_native_pods.rb — adds :modular_headers => true to React-jsinspector so
 //    Xcode 16 doesn't emit a "module not found" error for jsinspector-modern.
 //
-// 2. Podfile — removes :privacy_file_aggregation_enabled option injected by some
+// 3. Podfile — removes :privacy_file_aggregation_enabled option injected by some
 //    older pod versions that CocoaPods 1.15+ no longer accepts.
 //
-// 3. Podfile post_install — flattens OTHER_CFLAGS arrays (razorpay-pod ships
+// 4. Podfile post_install — flattens OTHER_CFLAGS arrays (razorpay-pod ships
 //    vendored XCFrameworks that confuse react_native_post_install), bumps any pod
 //    with a deployment target below iOS 13.4, and silences GCC warnings in
 //    react-native-razorpay which treats them as errors.
@@ -22,7 +27,23 @@ const withIosPodfilePatches = (config) =>
       const projectRoot = config.modRequest.projectRoot;
       const iosDir = config.modRequest.platformProjectRoot;
 
-      // --- 1. react_native_pods.rb: React-jsinspector modular_headers ---
+      // --- 1. .xcode.env.local: BUNDLE_COMMAND + CLI_PATH for expo-router ---
+      // expo is hoisted to the monorepo root (two levels above apps/customer-app),
+      // so Xcode build scripts can't find it via the app's own node_modules.
+      const monorepoRoot = path.resolve(projectRoot, '../..');
+      const cliCandidates = [
+        path.join(monorepoRoot, 'node_modules/expo/bin/cli'),
+        path.join(projectRoot, 'node_modules/expo/bin/cli'),
+      ];
+      const cliPath = cliCandidates.find(fs.existsSync) || cliCandidates[0];
+      const xcodEnvLocal = path.join(iosDir, '.xcode.env.local');
+      fs.writeFileSync(
+        xcodEnvLocal,
+        `export BUNDLE_COMMAND=export:embed\nexport CLI_PATH="${cliPath}"\n`
+      );
+      console.log(`✅ [withIosPodfilePatches] .xcode.env.local written (CLI_PATH=${cliPath})`);
+
+      // --- 2. react_native_pods.rb: React-jsinspector modular_headers ---
       const rnPodsCandidates = [
         path.join(projectRoot, 'node_modules/react-native/scripts/react_native_pods.rb'),
         path.join(projectRoot, '../../node_modules/react-native/scripts/react_native_pods.rb'),

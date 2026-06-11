@@ -547,6 +547,13 @@ workflows:
         script: |
           cd apps/customer-app
           npx expo prebuild --platform ios --clean --non-interactive
+          # with-environment.sh explicitly sources .xcode.env.local before react-native-xcode.sh.
+          # Setting BUNDLE_COMMAND=export:embed makes react-native-xcode.sh call expo export:embed,
+          # which passes customTransformOptions.routerRoot to Metro so babel-preset-expo can
+          # replace process.env.EXPO_ROUTER_APP_ROOT with a string literal for require.context.
+          WORKSPACE_ROOT=$(cd .. && pwd)
+          printf 'export BUNDLE_COMMAND=export:embed\nexport CLI_PATH="%s/node_modules/expo/bin/cli"\n' \
+            "$WORKSPACE_ROOT" > ios/.xcode.env.local
 
       - name: Patch Podfile and react_native_pods.rb
         script: |
@@ -638,11 +645,6 @@ workflows:
 
       - name: Build IPA
         script: |
-          # expo export:embed (unlike react-native bundle) passes customTransformOptions.routerRoot
-          # to Metro, which is required by babel-preset-expo's expoRouterBabelPlugin to replace
-          # process.env.EXPO_ROUTER_APP_ROOT with a string literal for require.context in _ctx.ios.js
-          export BUNDLE_COMMAND="export:embed"
-          export CLI_PATH="$PWD/node_modules/expo/bin/cli"
           xcode-project use-profiles
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
@@ -706,6 +708,9 @@ workflows:
         script: |
           cd apps/driver-app
           npx expo prebuild --platform ios --clean --non-interactive
+          WORKSPACE_ROOT=$(cd .. && pwd)
+          printf 'export BUNDLE_COMMAND=export:embed\nexport CLI_PATH="%s/node_modules/expo/bin/cli"\n' \
+            "$WORKSPACE_ROOT" > ios/.xcode.env.local
 
       - name: Patch Podfile and react_native_pods.rb
         script: |
@@ -792,11 +797,6 @@ workflows:
 
       - name: Build IPA
         script: |
-          # expo export:embed (unlike react-native bundle) passes customTransformOptions.routerRoot
-          # to Metro, which is required by babel-preset-expo's expoRouterBabelPlugin to replace
-          # process.env.EXPO_ROUTER_APP_ROOT with a string literal for require.context in _ctx.ios.js
-          export BUNDLE_COMMAND="export:embed"
-          export CLI_PATH="$PWD/node_modules/expo/bin/cli"
           xcode-project use-profiles
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \

@@ -18,7 +18,7 @@ workflows:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
-      node: 20.17.0
+      node: 20.19.4
       java: 17
 
     triggering:
@@ -30,7 +30,7 @@ workflows:
 
     scripts:
       - name: Install dependencies
-        script: npm install
+        script: npm install --legacy-peer-deps
 
       - name: Configure release signing
         script: |
@@ -123,7 +123,7 @@ workflows:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
-      node: 20.17.0
+      node: 20.19.4
       java: 17
 
     triggering:
@@ -135,7 +135,7 @@ workflows:
 
     scripts:
       - name: Install dependencies
-        script: npm install
+        script: npm install --legacy-peer-deps
 
       - name: Configure release signing
         script: |
@@ -228,7 +228,7 @@ workflows:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
-      node: 20.17.0
+      node: 20.19.4
       java: 17
 
     triggering:
@@ -242,7 +242,7 @@ workflows:
 
     scripts:
       - name: Install dependencies
-        script: npm install
+        script: npm install --legacy-peer-deps
 
       - name: Configure release signing
         script: |
@@ -376,7 +376,7 @@ workflows:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
-      node: 20.17.0
+      node: 20.19.4
       java: 17
 
     triggering:
@@ -390,7 +390,7 @@ workflows:
 
     scripts:
       - name: Install dependencies
-        script: npm install
+        script: npm install --legacy-peer-deps
 
       - name: Configure release signing
         script: |
@@ -526,8 +526,8 @@ workflows:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
-      node: 20.17.0
-      xcode: 16
+      node: 20.19.4
+      xcode: latest
       cocoapods: 1.15.2
 
     triggering:
@@ -541,7 +541,7 @@ workflows:
 
     scripts:
       - name: Install dependencies
-        script: npm install
+        script: npm install --legacy-peer-deps
 
       - name: Expo prebuild (iOS)
         script: |
@@ -606,7 +606,7 @@ workflows:
               "        c.build_settings[k] = c.build_settings[k].join(' ') if c.build_settings[k].is_a?(Array)\n"
               "      end\n"
               "      min = c.build_settings['IPHONEOS_DEPLOYMENT_TARGET']\n"
-              '      c.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'13.4\' if min.to_f < 13.4\n'
+              '      c.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'15.1\' if min.to_f < 15.1\n'
               "      if t.name == 'react-native-razorpay'\n"
               "        c.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'\n"
               "      end\n"
@@ -687,8 +687,8 @@ workflows:
         EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
-      node: 20.17.0
-      xcode: 16
+      node: 20.19.4
+      xcode: latest
       cocoapods: 1.15.2
 
     triggering:
@@ -702,7 +702,7 @@ workflows:
 
     scripts:
       - name: Install dependencies
-        script: npm install
+        script: npm install --legacy-peer-deps
 
       - name: Expo prebuild (iOS)
         script: |
@@ -758,7 +758,7 @@ workflows:
               "        c.build_settings[k] = c.build_settings[k].join(' ') if c.build_settings[k].is_a?(Array)\n"
               "      end\n"
               "      min = c.build_settings['IPHONEOS_DEPLOYMENT_TARGET']\n"
-              '      c.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'13.4\' if min.to_f < 13.4\n'
+              '      c.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'15.1\' if min.to_f < 15.1\n'
               "      if t.name == 'react-native-razorpay'\n"
               "        c.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'\n"
               "      end\n"

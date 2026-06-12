@@ -516,9 +516,6 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: in.transitco.customer
       groups:
         - transit_ios
         - transit_android
@@ -542,6 +539,17 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm install --legacy-peer-deps
+
+      - name: Set up iOS code signing
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "in.transitco.customer" \
+            --type IOS_APP_STORE \
+            --certificate-key @env:APP_STORE_CONNECT_PRIVATE_KEY \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --create
+          keychain add-certificates
 
       - name: Expo prebuild (iOS)
         script: |
@@ -677,9 +685,6 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: in.transitco.driver
       groups:
         - transit_ios
         - transit_android
@@ -703,6 +708,17 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm install --legacy-peer-deps
+
+      - name: Set up iOS code signing
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "in.transitco.driver" \
+            --type IOS_APP_STORE \
+            --certificate-key @env:APP_STORE_CONNECT_PRIVATE_KEY \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --create
+          keychain add-certificates
 
       - name: Expo prebuild (iOS)
         script: |

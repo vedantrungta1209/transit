@@ -581,7 +581,7 @@ workflows:
           # Setting BUNDLE_COMMAND=export:embed makes react-native-xcode.sh call expo export:embed,
           # which passes customTransformOptions.routerRoot to Metro so babel-preset-expo can
           # replace process.env.EXPO_ROUTER_APP_ROOT with a string literal for require.context.
-          WORKSPACE_ROOT=$(cd .. && pwd)
+          WORKSPACE_ROOT=$(cd ../.. && pwd)
           printf 'export BUNDLE_COMMAND=export:embed\nexport CLI_PATH="%s/node_modules/expo/bin/cli"\n' \
             "$WORKSPACE_ROOT" > ios/.xcode.env.local
 
@@ -750,7 +750,7 @@ workflows:
         script: |
           cd apps/driver-app
           npx expo prebuild --platform ios --clean --non-interactive
-          WORKSPACE_ROOT=$(cd .. && pwd)
+          WORKSPACE_ROOT=$(cd ../.. && pwd)
           printf 'export BUNDLE_COMMAND=export:embed\nexport CLI_PATH="%s/node_modules/expo/bin/cli"\n' \
             "$WORKSPACE_ROOT" > ios/.xcode.env.local
 

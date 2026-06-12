@@ -15,7 +15,8 @@
       "supportsTablet": false,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Transit needs access to your photo library to upload payment documents.",
-        "NSCameraUsageDescription": "Transit needs access to your camera to scan QR codes and upload documents."
+        "NSCameraUsageDescription": "Transit needs access to your camera to scan QR codes and upload documents.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {

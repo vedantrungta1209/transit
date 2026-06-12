@@ -66,16 +66,26 @@ jobs:
         run: cd ../.. && npm install
       - name: Install EAS CLI
         run: npm install -g eas-cli@latest
-      - name: Build iOS + Android
-        run: eas build --profile production --platform all --non-interactive --wait
+      - name: Build iOS
+        id: build-ios
+        run: eas build --profile production --platform ios --non-interactive --wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       - name: Submit iOS to TestFlight
+        if: always() && steps.build-ios.outcome == 'success'
         run: eas submit --profile production --platform ios --latest --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      - name: Build Android
+        id: build-android
+        run: eas build --profile production --platform android --non-interactive --wait
+        continue-on-error: true
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       - name: Submit Android to Play Store (internal)
+        if: steps.build-android.outcome == 'success'
         run: eas submit --profile production --platform android --latest --non-interactive
+        continue-on-error: true
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
@@ -120,15 +130,25 @@ jobs:
         run: cd ../.. && npm install
       - name: Install EAS CLI
         run: npm install -g eas-cli@latest
-      - name: Build iOS + Android
-        run: eas build --profile production --platform all --non-interactive --wait
+      - name: Build iOS
+        id: build-ios
+        run: eas build --profile production --platform ios --non-interactive --wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       - name: Submit iOS to TestFlight
+        if: always() && steps.build-ios.outcome == 'success'
         run: eas submit --profile production --platform ios --latest --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      - name: Build Android
+        id: build-android
+        run: eas build --profile production --platform android --non-interactive --wait
+        continue-on-error: true
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       - name: Submit Android to Play Store (internal)
+        if: steps.build-android.outcome == 'success'
         run: eas submit --profile production --platform android --latest --non-interactive
+        continue-on-error: true
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

@@ -5,10 +5,12 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "node": "20.17.0"
     },
     "preview": {
       "distribution": "internal",
+      "node": "20.17.0",
       "android": {
         "buildType": "apk"
       },
@@ -22,6 +24,7 @@
       }
     },
     "production": {
+      "node": "20.17.0",
       "android": {
         "buildType": "app-bundle"
       },

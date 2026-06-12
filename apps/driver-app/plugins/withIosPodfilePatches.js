@@ -89,7 +89,7 @@ const withIosPodfilePatches = (config) =>
         "        c.build_settings[k] = c.build_settings[k].join(' ') if c.build_settings[k].is_a?(Array)",
         '      end',
         "      min = c.build_settings['IPHONEOS_DEPLOYMENT_TARGET']",
-        "      c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.4' if min.to_f < 13.4",
+        "      c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1' if min.to_f < 15.1",
         "      if t.name == 'react-native-razorpay'",
         "        c.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'",
         '      end',

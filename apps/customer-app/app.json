@@ -48,6 +48,7 @@
       "./plugins/withIosPodfilePatches"
     ],
     "scheme": "transit",
+    "newArchEnabled": false,
     "extra": {
       "router": {
         "origin": false

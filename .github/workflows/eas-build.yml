@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: '20.19.4'
       - name: Install dependencies (monorepo root)
-        run: cd ../.. && npm install
+        run: cd ../.. && npm install --legacy-peer-deps
       - name: Install EAS CLI
         run: npm install -g eas-cli@latest
       - name: Build Android APK
@@ -63,7 +63,7 @@ jobs:
         with:
           node-version: '20.19.4'
       - name: Install dependencies (monorepo root)
-        run: cd ../.. && npm install
+        run: cd ../.. && npm install --legacy-peer-deps
       - name: Install EAS CLI
         run: npm install -g eas-cli@latest
       - name: Build iOS
@@ -105,7 +105,7 @@ jobs:
         with:
           node-version: '20.19.4'
       - name: Install dependencies (monorepo root)
-        run: cd ../.. && npm install
+        run: cd ../.. && npm install --legacy-peer-deps
       - name: Install EAS CLI
         run: npm install -g eas-cli@latest
       - name: Build Android APK
@@ -127,7 +127,7 @@ jobs:
         with:
           node-version: '20.19.4'
       - name: Install dependencies (monorepo root)
-        run: cd ../.. && npm install
+        run: cd ../.. && npm install --legacy-peer-deps
       - name: Install EAS CLI
         run: npm install -g eas-cli@latest
       - name: Build iOS

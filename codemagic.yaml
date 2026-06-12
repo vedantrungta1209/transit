@@ -32,6 +32,11 @@ workflows:
       - name: Install dependencies
         script: npm install --legacy-peer-deps
 
+      - name: Expo prebuild (Android)
+        script: |
+          cd apps/customer-app
+          npx expo prebuild --platform android --clean --non-interactive
+
       - name: Configure release signing
         script: |
           cat > apps/customer-app/android/key.properties << EOF
@@ -136,6 +141,11 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm install --legacy-peer-deps
+
+      - name: Expo prebuild (Android)
+        script: |
+          cd apps/driver-app
+          npx expo prebuild --platform android --clean --non-interactive
 
       - name: Configure release signing
         script: |
@@ -243,6 +253,11 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm install --legacy-peer-deps
+
+      - name: Expo prebuild (Android)
+        script: |
+          cd apps/customer-app
+          npx expo prebuild --platform android --clean --non-interactive
 
       - name: Configure release signing
         script: |
@@ -391,6 +406,11 @@ workflows:
     scripts:
       - name: Install dependencies
         script: npm install --legacy-peer-deps
+
+      - name: Expo prebuild (Android)
+        script: |
+          cd apps/driver-app
+          npx expo prebuild --platform android --clean --non-interactive
 
       - name: Configure release signing
         script: |
@@ -542,13 +562,10 @@ workflows:
 
       - name: Set up iOS code signing
         script: |
-          # Pin codemagic-cli-tools to a version that uses RSA 2048 for CSR generation.
-          # Newer versions switched to EC keys which Apple rejects with 409.
-          pip3 install codemagic-cli-tools==0.53.4 --quiet
           keychain initialize
           app-store-connect fetch-signing-files "in.transitco.customer" \
             --type IOS_APP_STORE \
-            --certificate-key @env:APP_STORE_CONNECT_PRIVATE_KEY \
+            --certificate-key @env:CERTIFICATE_PRIVATE_KEY \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
             --create
@@ -714,11 +731,10 @@ workflows:
 
       - name: Set up iOS code signing
         script: |
-          pip3 install codemagic-cli-tools==0.53.4 --quiet
           keychain initialize
           app-store-connect fetch-signing-files "in.transitco.driver" \
             --type IOS_APP_STORE \
-            --certificate-key @env:APP_STORE_CONNECT_PRIVATE_KEY \
+            --certificate-key @env:CERTIFICATE_PRIVATE_KEY \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
             --create

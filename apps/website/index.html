@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Transit — Ride. Earn. Freedom.</title>
+<meta name="description" content="Transit is India's fair ride-hailing app. Book bikes, autos & cabs instantly. Drivers keep 100% with zero commission. First 3 months free." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* === Transit brand tokens === */
+  :root {
+    --t-ink-900:   #071633;
+    --t-navy:      #0F2B5B;
+    --t-navy-600:  #163B78;
+    --t-amber:        #F7B32B;
+    --t-amber-deep:   #E8941A;
+    --t-amber-soft:   rgba(247,179,43,0.14);
+    --t-amber-line:   rgba(247,179,43,0.40);
+    --t-paper:    #F4F1EA;
+    --t-surface:  #FFFFFF;
+    --t-surface-2:#F5F6F8;
+    --t-line:     #E7E9EE;
+    --t-text:        #0F2B5B;
+    --t-text-muted:  #5C6B86;
+    --t-text-faint:  #93A0B5;
+    --t-on-navy:     #EAF0FA;
+    --t-on-navy-mut: rgba(234,240,250,0.62);
+    --t-on-amber:    #0A2047;
+    --t-success:  #1E9E6A;
+    --t-bike:  #3E86F5;
+    --t-auto:  #F7B32B;
+    --t-cab:   #1E9E6A;
+    --t-font-display: 'Space Grotesk', system-ui, sans-serif;
+    --t-font-ui:      'Manrope', system-ui, sans-serif;
+    --t-shadow-1: 0 1px 2px rgba(15,43,91,0.06), 0 2px 8px rgba(15,43,91,0.06);
+    --t-shadow-2: 0 8px 24px rgba(15,43,91,0.10);
+    --t-shadow-amber: 0 6px 20px rgba(247,179,43,0.34);
+    --t-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: var(--t-font-ui); color: var(--t-text); background: var(--t-paper); -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; color: inherit; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+  h1, h2, h3 { font-family: var(--t-font-display); font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+  .eyebrow { font-family: var(--t-font-display); font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--t-amber-deep); }
+
+  /* === Wordmark === */
+  .wm { display: inline-flex; align-items: center; gap: 11px; }
+  .wm-icon { width: 36px; height: 36px; flex-shrink: 0; }
+  .wm-text { font-family: var(--t-font-display); font-weight: 700; font-size: 22px; letter-spacing: -0.02em; color: #fff; }
+  .wm-text-dark { color: var(--t-navy); }
+
+  /* === Nav === */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(7,22,51,0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+  .navlinks { display: flex; align-items: center; gap: 2px; }
+  nav a.link { color: rgba(234,240,250,0.72); font-size: 14.5px; font-weight: 500; padding: 0 14px; transition: color 160ms; }
+  nav a.link:hover { color: #fff; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 20px; border-radius: 12px; font-family: var(--t-font-display); font-weight: 600; font-size: 15px; cursor: pointer; border: none; transition: filter 140ms, border-color 140ms, color 140ms; }
+  .btn-amber { background: var(--t-amber); color: var(--t-on-amber); box-shadow: var(--t-shadow-amber); }
+  .btn-amber:hover { filter: brightness(1.06); }
+  .btn-ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.22); }
+  .btn-ghost:hover { border-color: var(--t-amber); color: var(--t-amber); }
+  .btn-navy { background: var(--t-navy); color: #fff; }
+  .btn-navy:hover { background: var(--t-navy-600); }
+
+  /* === Hero === */
+  .hero { background: var(--t-ink-900); color: var(--t-on-navy); position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(90% 70% at 78% -5%, rgba(247,179,43,0.18), transparent 55%); pointer-events: none; }
+  .hero .wrap { position: relative; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 40px; align-items: center; padding-top: 80px; padding-bottom: 80px; }
+  .hero h1 { font-size: 68px; line-height: 1.02; font-weight: 500; }
+  .hero h1 .am { color: var(--t-amber); }
+  .hero p.lead { font-size: 19px; line-height: 1.55; color: var(--t-on-navy-mut); max-width: 460px; margin: 22px 0 30px; }
+  .stores { display: flex; gap: 14px; flex-wrap: wrap; }
+  .store { display: inline-flex; align-items: center; gap: 10px; height: 52px; padding: 0 20px; border-radius: 13px; background: #fff; color: var(--t-ink-900); font-family: var(--t-font-display); transition: transform 140ms var(--t-ease), box-shadow 140ms; }
+  .store:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
+  .store small { display: block; font-size: 10px; font-weight: 500; opacity: 0.6; letter-spacing: 0.04em; }
+  .store b { font-size: 16px; font-weight: 600; }
+  .trust { display: flex; gap: 28px; margin-top: 32px; flex-wrap: wrap; }
+  .trust .it b { font-family: var(--t-font-display); font-size: 22px; font-weight: 700; color: #fff; }
+  .trust .it span { display: block; font-size: 12.5px; color: var(--t-on-navy-mut); margin-top: 2px; }
+
+  /* hero phone mockup */
+  .phone { justify-self: center; width: 300px; height: 610px; background: linear-gradient(150deg,#15161a,#050608); border-radius: 46px; padding: 9px; box-shadow: 0 40px 90px rgba(0,0,0,0.5); }
+  .phone .scr { width: 100%; height: 100%; border-radius: 38px; overflow: hidden; background: var(--t-paper); position: relative; }
+  .phone .fare { position: absolute; left: 18px; right: 18px; bottom: 18px; background: #fff; border-radius: 18px; padding: 16px 18px; box-shadow: var(--t-shadow-2); }
+
+  /* === Sections === */
+  section { padding: 88px 0; }
+  .sec-head { max-width: 640px; margin-bottom: 48px; }
+  .sec-head h2 { font-size: 40px; line-height: 1.08; margin: 12px 0 0; }
+  .sec-head p { font-size: 17px; color: var(--t-text-muted); line-height: 1.55; margin: 14px 0 0; }
+
+  /* vehicle cards */
+  .vgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .vcard { background: var(--t-surface); border: 1px solid var(--t-line); border-radius: 20px; padding: 28px; transition: box-shadow 220ms var(--t-ease), transform 220ms; }
+  .vcard:hover { box-shadow: var(--t-shadow-2); transform: translateY(-3px); }
+  .vcard .ic { width: 56px; height: 56px; border-radius: 16px; background: var(--t-surface-2); display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+  .vcard h3 { font-size: 21px; margin-bottom: 8px; }
+  .vcard p { color: var(--t-text-muted); font-size: 14.5px; line-height: 1.5; margin: 0 0 14px; }
+  .vcard .from { font-family: var(--t-font-display); font-size: 14px; font-weight: 600; color: var(--t-text); }
+  .vcard .from span { color: var(--t-text-faint); font-weight: 500; }
+
+  /* honest split */
+  .honest { background: var(--t-navy); color: #fff; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .pane { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 22px; padding: 36px; }
+  .pane .ic { width: 52px; height: 52px; border-radius: 14px; background: rgba(247,179,43,0.16); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+  .pane h3 { font-size: 26px; margin-bottom: 12px; }
+  .pane p { color: var(--t-on-navy-mut); font-size: 15.5px; line-height: 1.6; margin: 0 0 18px; }
+  .pane ul { list-style: none; padding: 0; margin: 0; }
+  .pane li { display: flex; align-items: center; gap: 12px; padding: 9px 0; font-size: 15px; color: #eaf0fa; border-top: 1px solid rgba(255,255,255,0.07); }
+  .pane li:first-child { border-top: none; }
+
+  /* steps */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .step .num { font-family: var(--t-font-display); font-size: 15px; font-weight: 700; color: var(--t-amber-deep); width: 40px; height: 40px; border-radius: 999px; border: 1.5px solid var(--t-amber-line); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .step h3 { font-size: 20px; margin-bottom: 8px; }
+  .step p { color: var(--t-text-muted); font-size: 14.5px; line-height: 1.55; margin: 0; }
+
+  /* driver band */
+  .band { background: linear-gradient(135deg, var(--t-amber), var(--t-amber-deep)); border-radius: 28px; padding: 52px; color: var(--t-on-amber); display: grid; grid-template-columns: 1.3fr 1fr; gap: 30px; align-items: center; }
+  .band h2 { font-size: 38px; line-height: 1.06; margin-bottom: 14px; }
+  .band p { font-size: 16.5px; line-height: 1.5; margin: 0; color: rgba(10,32,71,0.82); }
+  .band .cta { justify-self: end; text-align: right; }
+  .band .big { font-family: var(--t-font-display); font-size: 64px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+  .band .big span { font-size: 24px; }
+  .band .note { font-size: 14px; margin-bottom: 18px; color: rgba(10,32,71,0.78); }
+
+  /* cities */
+  .cities { display: flex; gap: 14px; flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; gap: 9px; padding: 12px 20px; border-radius: 999px; border: 1px solid var(--t-line); background: var(--t-surface); font-family: var(--t-font-display); font-weight: 600; font-size: 15px; }
+  .chip.soon { color: var(--t-text-faint); border-style: dashed; background: transparent; }
+  .chip .liv { width: 8px; height: 8px; border-radius: 999px; background: var(--t-success); flex-shrink: 0; }
+
+  /* get section */
+  .get-box { background: var(--t-navy); border-radius: 28px; padding: 60px; text-align: center; color: #fff; position: relative; overflow: hidden; }
+  .get-box::before { content: ''; position: absolute; right: -40px; top: -40px; width: 240px; height: 240px; border-radius: 999px; background: radial-gradient(circle,rgba(247,179,43,0.25),transparent 70%); pointer-events: none; }
+
+  /* footer */
+  footer { background: var(--t-ink-900); color: var(--t-on-navy-mut); padding: 64px 0 40px; }
+  footer .cols { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 30px; margin-bottom: 40px; }
+  footer h4 { font-family: var(--t-font-display); color: #fff; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 16px; }
+  footer a { display: block; color: var(--t-on-navy-mut); font-size: 14px; padding: 5px 0; transition: color 140ms; }
+  footer a:hover { color: var(--t-amber); }
+  footer .bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; display: flex; justify-content: space-between; font-size: 13px; flex-wrap: wrap; gap: 12px; }
+
+  /* responsive */
+  @media (max-width: 900px) {
+    .hero .wrap { grid-template-columns: 1fr; padding-top: 52px; padding-bottom: 52px; }
+    .hero h1 { font-size: 44px; }
+    .phone { display: none; }
+    .navlinks .link { display: none; }
+    .vgrid, .steps { grid-template-columns: 1fr !important; }
+    .split { grid-template-columns: 1fr; }
+    .band { grid-template-columns: 1fr; }
+    .band .cta { justify-self: start; text-align: left; }
+    footer .cols { grid-template-columns: 1fr 1fr; }
+    .get-box { padding: 40px 28px; }
+    section { padding: 60px 0; }
+  }
+  @media (max-width: 540px) {
+    footer .cols { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="wrap">
+    <a class="wm" href="#" aria-label="Transit">
+      <svg class="wm-icon" viewBox="0 0 120 120" aria-hidden="true">
+        <defs>
+          <linearGradient id="nb" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#16356A"/>
+            <stop offset="1" stop-color="#0A1C40"/>
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="108" height="108" rx="28" fill="url(#nb)"/>
+        <rect x="32" y="33" width="56" height="13.5" rx="6.75" fill="#F7B32B"/>
+        <path d="M53 44 L67 44 L67 70 L78 86 L70 90 L60 80 L50 90 L42 86 L53 70 Z" fill="#F7B32B"/>
+      </svg>
+      <span class="wm-text">Transit</span>
+    </a>
+    <div class="navlinks">
+      <a class="link" href="#ride">Ride</a>
+      <a class="link" href="#drive">Drive</a>
+      <a class="link" href="#cities">Cities</a>
+      <a class="link" href="#how">How it works</a>
+      <a class="btn btn-amber" href="#get" style="margin-left:14px">Get the app</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow" style="color:var(--t-amber);margin-bottom:16px">Bike · Auto · Cab — across India</div>
+      <h1>Ride. Earn.<br /><span class="am">Freedom.</span></h1>
+      <p class="lead">India's fair ride-hailing app. Book in seconds at a price you can see upfront — and ride with drivers who keep everything they earn.</p>
+      <div class="stores">
+        <a class="store" href="#get">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 12c0-1.7.9-3.1 2.3-3.9-.8-1.2-2.1-2-3.7-2.1-1.6-.1-3.3 1-4 1-.8 0-2.1-1-3.5-.9C5.5 6.2 4 8.3 4 11c0 3.6 2.6 7.5 4.3 7.5.8 0 1.5-.6 2.7-.6 1.2 0 1.8.6 2.7.6 1.7 0 3.3-3.4 3.3-3.6-1.3-.6-2-1.8-2-3.4zM14.5 4.2c.8-1 1.3-2.2 1.1-3.2-1.1.1-2.3.8-3 1.7-.7.8-1.2 2-1 3.1 1.2.1 2.2-.6 2.9-1.6z"/></svg>
+          <span><small>Download on the</small><b>App Store</b></span>
+        </a>
+        <a class="store" href="#get">
+          <svg width="20" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.6 2.3c-.3.3-.5.8-.5 1.4v16.6c0 .6.2 1.1.5 1.4l.1.1 9.3-9.3v-.2L3.6 2.3z"/><path d="M16.2 15.3l-3.1-3.1v-.2l3.1-3.1.1.1 3.7 2.1c1 .6 1 1.6 0 2.2l-3.8 2.1z" opacity=".85"/><path d="M3.7 21.7l9.3-9.3-3.1-3.1-6.3 12.2.1.2z" opacity=".7"/><path d="M3.7 2.3l9.3 9.3-3.1 3.1-6.3-12.2.1-.2z" opacity=".5"/></svg>
+          <span><small>Get it on</small><b>Google Play</b></span>
+        </a>
+      </div>
+      <div class="trust">
+        <div class="it"><b>★ 4.8</b><span>Rider rating</span></div>
+        <div class="it"><b>0%</b><span>Driver commission</span></div>
+        <div class="it"><b>2 cities</b><span>Live now, more soon</span></div>
+      </div>
+    </div>
+
+    <!-- Phone mockup -->
+    <div class="phone" aria-hidden="true">
+      <div class="scr">
+        <div style="height:100%;background:#EAEDF1;position:relative">
+          <svg width="100%" height="100%" viewBox="0 0 282 592" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0">
+            <rect width="282" height="592" fill="#EAEDF1"/>
+            <circle cx="220" cy="430" r="70" fill="#E1EDE3"/>
+            <rect x="20" y="120" width="110" height="80" rx="10" fill="#E1EDE3"/>
+            <g stroke="#fff" stroke-width="13" stroke-linecap="round">
+              <path d="M-20 130 L320 200"/>
+              <path d="M-20 360 L320 300"/>
+              <path d="M70 -20 L120 620"/>
+              <path d="M210 -20 L250 620"/>
+            </g>
+            <path d="M70 470 C110 400 160 370 170 280 C178 210 210 180 230 110" fill="none" stroke="#F7B32B" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="70" cy="470" r="10" fill="#0F2B5B" stroke="#fff" stroke-width="3"/>
+          </svg>
+          <!-- Destination pin -->
+          <div style="position:absolute;left:218px;top:72px">
+            <svg width="30" height="38" viewBox="0 0 32 40">
+              <path d="M16 39s14-11 14-23A14 14 0 1 0 2 16c0 12 14 23 14 23z" fill="#F7B32B"/>
+              <circle cx="16" cy="15" r="5" fill="#0F2B5B"/>
+            </svg>
+          </div>
+          <!-- Fare card -->
+          <div class="fare">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <span style="display:flex;align-items:center;gap:9px">
+                <span style="width:34px;height:34px;border-radius:10px;background:#F5F6F8;display:flex;align-items:center;justify-content:center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8941A" stroke-width="1.7" stroke-linecap="round"><path d="M3 16.5h18 M4 16.5v-4l3-5h6l4 4v5"/><circle cx="7" cy="16.5" r="2"/><circle cx="17" cy="16.5" r="2"/></svg>
+                </span>
+                <b style="font-family:var(--t-font-display);font-size:15px;color:#0F2B5B">Auto</b>
+              </span>
+              <span style="font-family:var(--t-font-display);font-size:18px;font-weight:700;color:#0F2B5B">₹64</span>
+            </div>
+            <div style="height:46px;border-radius:12px;background:#F7B32B;display:flex;align-items:center;justify-content:center;font-family:var(--t-font-display);font-weight:600;color:#0A2047;box-shadow:var(--t-shadow-amber)">Book · upfront ₹64</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Vehicles -->
+<section id="ride">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Three ways to move</div>
+      <h2>Whatever the trip, there's a Transit for it.</h2>
+    </div>
+    <div class="vgrid">
+      <div class="vcard">
+        <div class="ic">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--t-bike)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 18.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M6 15.5l3.5-6h4l2.5 6 M9 9.5h6 M14 9.5l1.5-3h2"/></svg>
+        </div>
+        <h3>Bike</h3>
+        <p>Beat the traffic. The quickest, cheapest way across town.</p>
+        <div class="from">from <span>₹</span>25</div>
+      </div>
+      <div class="vcard">
+        <div class="ic">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--t-auto)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16.5h18 M4 16.5v-4l3-5h6l4 4v5 M4 11.5h16"/><circle cx="6" cy="16.5" r="2"/><circle cx="18" cy="16.5" r="2"/></svg>
+        </div>
+        <h3>Auto</h3>
+        <p>The classic three-wheeler — metered fairness, no haggling.</p>
+        <div class="from">from <span>₹</span>45</div>
+      </div>
+      <div class="vcard">
+        <div class="ic">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--t-cab)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 16v-3l2-4h10l2 4v3 M5 13h14 M9 9V7h6v2"/><circle cx="7.5" cy="16" r="1.6"/><circle cx="16.5" cy="16" r="1.6"/></svg>
+        </div>
+        <h3>Cab</h3>
+        <p>Air-conditioned comfort for longer trips and the airport run.</p>
+        <div class="from">from <span>₹</span>89</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Honest difference -->
+<section class="honest" id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow" style="color:var(--t-amber)">The honest difference</div>
+      <h2 style="color:#fff">Fair for the rider. Fair for the driver.</h2>
+    </div>
+    <div class="split">
+      <div class="pane">
+        <div class="ic">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F7B32B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z M9 12l2 2 4-4"/></svg>
+        </div>
+        <h3>You see the fare. You pay the fare.</h3>
+        <p>The price is locked before you book — no surge roulette, no "rounding up", no surprises at the end of the trip.</p>
+        <ul>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F7B32B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg> Upfront, all-in pricing</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F7B32B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg> Cash, UPI or card</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F7B32B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg> Live tracking &amp; a start code</li>
+        </ul>
+      </div>
+      <div class="pane">
+        <div class="ic">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F7B32B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16l5-5 4 3 8-8 M16 6h5v5"/></svg>
+        </div>
+        <h3>Zero commission. Every rupee is theirs.</h3>
+        <p>Drivers pay a small flat subscription instead of a cut on every ride. They keep 100% of the fare and 100% of the tip.</p>
+        <ul>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F7B32B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg> 0% per-ride commission</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F7B32B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg> Flat ₹299/month, cancel anytime</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F7B32B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg> First 3 months free</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">How it works</div>
+      <h2>From "where to?" to "you've arrived" in four taps.</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>Set your drop</h3>
+        <p>Tell Transit where you're headed and see fares for bike, auto and cab side by side.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Match in seconds</h3>
+        <p>We connect you to the nearest driver. Share the start code, hop in, go.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Arrive &amp; rate</h3>
+        <p>Track the whole way, pay the price you saw, and rate your driver.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Drive CTA band -->
+<section id="drive">
+  <div class="wrap">
+    <div class="band">
+      <div>
+        <h2>Drive with Transit.<br />Keep what you earn.</h2>
+        <p>No commission on a single ride. Just a flat subscription — and your first three months are on us.</p>
+      </div>
+      <div class="cta">
+        <div class="big">0%<span> cut</span></div>
+        <div class="note">3 months free · then ₹299/mo</div>
+        <a class="btn btn-navy" href="#get">Become a driver</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Cities -->
+<section id="cities">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Where we ride</div>
+      <h2>Live in Lucknow &amp; Delhi. Your city's next.</h2>
+    </div>
+    <div class="cities">
+      <span class="chip"><span class="liv"></span>Lucknow</span>
+      <span class="chip"><span class="liv"></span>Delhi NCR</span>
+      <span class="chip soon">Kanpur · soon</span>
+      <span class="chip soon">Jaipur · soon</span>
+      <span class="chip soon">Indore · soon</span>
+      <span class="chip soon">Bhopal · soon</span>
+    </div>
+  </div>
+</section>
+
+<!-- Get the app -->
+<section id="get" style="padding-top:0">
+  <div class="wrap">
+    <div class="get-box">
+      <div class="eyebrow" style="color:var(--t-amber);margin-bottom:14px">Get the app</div>
+      <h2 style="color:#fff;font-size:38px;margin-bottom:10px">Your next ride is one tap away.</h2>
+      <p style="color:var(--t-on-navy-mut);font-size:17px;max-width:480px;margin:0 auto 28px">Download Transit and ride fair — or sign up to drive and keep 100%.</p>
+      <div class="stores" style="justify-content:center">
+        <a class="store" href="#">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 12c0-1.7.9-3.1 2.3-3.9-.8-1.2-2.1-2-3.7-2.1-1.6-.1-3.3 1-4 1-.8 0-2.1-1-3.5-.9C5.5 6.2 4 8.3 4 11c0 3.6 2.6 7.5 4.3 7.5.8 0 1.5-.6 2.7-.6 1.2 0 1.8.6 2.7.6 1.7 0 3.3-3.4 3.3-3.6-1.3-.6-2-1.8-2-3.4zM14.5 4.2c.8-1 1.3-2.2 1.1-3.2-1.1.1-2.3.8-3 1.7-.7.8-1.2 2-1 3.1 1.2.1 2.2-.6 2.9-1.6z"/></svg>
+          <span><small>Download on the</small><b>App Store</b></span>
+        </a>
+        <a class="store" href="#">
+          <svg width="20" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.6 2.3c-.3.3-.5.8-.5 1.4v16.6c0 .6.2 1.1.5 1.4l.1.1 9.3-9.3v-.2L3.6 2.3z"/><path d="M16.2 15.3l-3.1-3.1v-.2l3.1-3.1.1.1 3.7 2.1c1 .6 1 1.6 0 2.2l-3.8 2.1z" opacity=".85"/><path d="M3.7 21.7l9.3-9.3-3.1-3.1-6.3 12.2.1.2z" opacity=".7"/><path d="M3.7 2.3l9.3 9.3-3.1 3.1-6.3-12.2.1-.2z" opacity=".5"/></svg>
+          <span><small>Get it on</small><b>Google Play</b></span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <a class="wm" href="#" aria-label="Transit" style="margin-bottom:16px;display:inline-flex">
+          <svg class="wm-icon" viewBox="0 0 120 120" aria-hidden="true">
+            <defs>
+              <linearGradient id="fb" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#16356A"/>
+                <stop offset="1" stop-color="#0A1C40"/>
+              </linearGradient>
+            </defs>
+            <rect x="6" y="6" width="108" height="108" rx="28" fill="url(#fb)"/>
+            <rect x="32" y="33" width="56" height="13.5" rx="6.75" fill="#F7B32B"/>
+            <path d="M53 44 L67 44 L67 70 L78 86 L70 90 L60 80 L50 90 L42 86 L53 70 Z" fill="#F7B32B"/>
+          </svg>
+          <span class="wm-text" style="margin-left:11px">Transit</span>
+        </a>
+        <p style="font-size:14px;line-height:1.55;margin:0;max-width:260px;color:var(--t-on-navy-mut)">Honest ride-hailing for India. The price you see is the price you pay.</p>
+      </div>
+      <div>
+        <h4>Ride</h4>
+        <a href="#">Book a ride</a>
+        <a href="#cities">Cities</a>
+        <a href="#">Fare estimate</a>
+        <a href="#">Safety</a>
+      </div>
+      <div>
+        <h4>Drive</h4>
+        <a href="#drive">Become a driver</a>
+        <a href="#how">Zero commission</a>
+        <a href="#">Driver support</a>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Careers</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+    <div class="bottom">
+      <span>© 2026 Transit Mobility Pvt. Ltd.</span>
+      <span>Privacy · Terms · Made in India 🇮🇳</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,8 +1,14 @@
-<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="48" height="48" rx="12" fill="#0284c7"/>
-  <!-- Arc left -->
-  <path d="M10 24 C10 16 16 10 24 10" stroke="white" stroke-width="3" stroke-linecap="round"/>
-  <path d="M10 24 C10 32 16 38 24 38" stroke="white" stroke-width="3" stroke-linecap="round"/>
-  <!-- Arrow -->
-  <path d="M18 17 L30 24 L18 31" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Transit">
+  <defs>
+    <linearGradient id="tField" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16356A"/>
+      <stop offset="1" stop-color="#0A1C40"/>
+    </linearGradient>
+  </defs>
+  <!-- Squircle background -->
+  <rect x="6" y="6" width="108" height="108" rx="28" fill="url(#tField)"/>
+  <!-- T crossbar -->
+  <rect x="32" y="33" width="56" height="13.5" rx="6.75" fill="#F7B32B"/>
+  <!-- T stem with forward-motion foot -->
+  <path d="M53 44 L67 44 L67 70 L78 86 L70 90 L60 80 L50 90 L42 86 L53 70 Z" fill="#F7B32B"/>
 </svg>

@@ -2,17 +2,23 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import Svg, { Path, Rect } from 'react-native-svg';
+import Svg, { Path, Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { api } from '../../src/lib/api';
 import { T } from '../../src/lib/theme';
 
 function TransitWordmark() {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-      {/* T glyph */}
-      <Svg width={36} height={36} viewBox="0 0 36 36">
-        <Rect x={4} y={6} width={28} height={7} rx={3.5} fill={T.AMBER} />
-        <Path d="M14 13 L14 28 Q14 31 18 31 Q22 31 22 28 L22 13" fill={T.AMBER} />
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+      <Svg width={40} height={40} viewBox="0 0 120 120">
+        <Defs>
+          <LinearGradient id="wmbg" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="#16356A" />
+            <Stop offset="1" stopColor="#0A1C40" />
+          </LinearGradient>
+        </Defs>
+        <Rect x="6" y="6" width="108" height="108" rx="28" fill="url(#wmbg)" />
+        <Rect x="32" y="33" width="56" height="13.5" rx="6.75" fill="#F7B32B" />
+        <Path d="M53 44 L67 44 L67 70 L78 86 L70 90 L60 80 L50 90 L42 86 L53 70 Z" fill="#F7B32B" />
       </Svg>
       <Text style={{ fontSize: 26, fontWeight: '700', color: '#fff', letterSpacing: -0.5 }}>Transit</Text>
     </View>

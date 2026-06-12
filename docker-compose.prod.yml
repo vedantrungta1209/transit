@@ -49,6 +49,12 @@ services:
     depends_on:
       - api
 
+  website:
+    image: nginx:alpine
+    restart: always
+    volumes:
+      - ./apps/website:/usr/share/nginx/html:ro
+
   nginx:
     image: nginx:alpine
     restart: always
@@ -62,6 +68,7 @@ services:
     depends_on:
       - api
       - admin
+      - website
 
   certbot:
     image: certbot/certbot

@@ -546,7 +546,7 @@ workflows:
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
       node: 20.19.4
-      xcode: 16.3
+      xcode: latest
       cocoapods: 1.15.2
 
     triggering:
@@ -719,7 +719,7 @@ workflows:
         EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
         EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
       node: 20.19.4
-      xcode: 16.3
+      xcode: latest
       cocoapods: 1.15.2
 
     triggering:

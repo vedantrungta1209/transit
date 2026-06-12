@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import Svg, { Rect, Path, Defs, LinearGradient, Stop, RadialGradient } from 'react-native-svg';
+import Svg, { Rect, Path, Circle, Defs, LinearGradient, Stop, RadialGradient } from 'react-native-svg';
 import { T } from '../src/lib/theme';
 
 const { width, height } = Dimensions.get('window');
@@ -17,7 +17,7 @@ function MapBackground() {
       <Rect width={w} height={h} fill={ink} />
       <Path d={`M260 0 L${w} 120 L${w} 260 L300 90 Z`} fill={park} opacity="0.7" />
       <Rect x="30" y={h - 140} width="110" height="100" rx="10" fill={park} opacity="0.6" />
-      <Svg.Circle cx="320" cy={h - 80} r="55" fill={park} opacity="0.6" />
+      <Circle cx="320" cy={h - 80} r="55" fill={park} opacity="0.6" />
       {/* Roads */}
       <Path d={`M-20 ${h * 0.3} L${w + 20} ${h * 0.42}`} stroke={road} strokeWidth="13" strokeLinecap="round" opacity="0.9" />
       <Path d={`M-20 ${h * 0.7} L${w + 20} ${h * 0.62}`} stroke={road} strokeWidth="13" strokeLinecap="round" opacity="0.9" />
@@ -30,11 +30,11 @@ function MapBackground() {
         fill="none" stroke="#F7B32B" strokeWidth="5" strokeLinecap="round"
       />
       {/* Pickup dot */}
-      <Svg.Circle cx={w * 0.24} cy={h} r="9" fill="#0F2B5B" />
-      <Svg.Circle cx={w * 0.24} cy={h} r="6" fill="#fff" />
+      <Circle cx={w * 0.24} cy={h} r="9" fill="#0F2B5B" />
+      <Circle cx={w * 0.24} cy={h} r="6" fill="#fff" />
       {/* Destination pin */}
       <Path d={`M${w * 0.66} ${h * 0.04} C${w * 0.66} ${h * 0.04} ${w * 0.73} ${h * 0.1} ${w * 0.66} ${h * 0.17} C${w * 0.59} ${h * 0.1} ${w * 0.66} ${h * 0.04} ${w * 0.66} ${h * 0.04}`} fill="#F7B32B" />
-      <Svg.Circle cx={w * 0.66} cy={h * 0.1} r="4" fill="#0F2B5B" />
+      <Circle cx={w * 0.66} cy={h * 0.1} r="4" fill="#0F2B5B" />
     </Svg>
   );
 }
@@ -129,12 +129,12 @@ const s = StyleSheet.create({
     position: 'absolute',
     bottom: 0, left: 0, right: 0,
     paddingTop: 80,
-    background: 'transparent',
+    backgroundColor: 'transparent',
   },
   content: {
     paddingHorizontal: 26,
     paddingBottom: 20,
-    background: 'transparent',
+    backgroundColor: 'transparent',
   },
   wordmark: {
     flexDirection: 'row',

@@ -39,7 +39,8 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "gdhruv579@gmail.com"
+        "appleId": "gdhruv579@gmail.com",
+        "ascAppId": "6777676736"
       },
       "android": {
         "track": "internal"

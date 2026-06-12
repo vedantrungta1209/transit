@@ -5,12 +5,17 @@ interface AuthState {
   user: any | null;
   token: string | null;
   setAuth: (token: string, user: any) => Promise<void>;
+  setUser: (user: any) => Promise<void>;
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null, token: null,
+  setUser: async (user) => {
+    await SecureStore.setItemAsync('user', JSON.stringify(user));
+    set({ user });
+  },
   setAuth: async (token, user) => {
     await SecureStore.setItemAsync('accessToken', token);
     await SecureStore.setItemAsync('user', JSON.stringify(user));

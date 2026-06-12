@@ -668,10 +668,9 @@ workflows:
 
       - name: Patch fmt sources
         script: |
+          chmod -R u+w apps/customer-app/ios/Pods/fmt/
           python3 << 'PYEOF'
-          import os, glob
-          # fmt 7.x uses __float128 which clang on Apple Silicon rejects.
-          # Inject the define at the top of every fmt header after pod install.
+          import glob
           guard = '#ifndef FMT_USE_FLOAT128\n#define FMT_USE_FLOAT128 0\n#endif\n'
           patched = 0
           for path in glob.glob('apps/customer-app/ios/Pods/fmt/include/fmt/*.h'):

@@ -762,6 +762,7 @@ workflows:
             --config Release
 
       - name: Upload to TestFlight
+        ignore_failure: true
         script: |
           printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
           chmod 600 /tmp/asc_key.p8
@@ -941,18 +942,23 @@ workflows:
 
       - name: Patch fmt sources
         script: |
+          chmod -R u+w apps/driver-app/ios/Pods/fmt/
           python3 << 'PYEOF'
-          import os, glob
-          guard = '#ifndef FMT_USE_FLOAT128\n#define FMT_USE_FLOAT128 0\n#endif\n'
+          import glob
+          guard = '#define FMT_USE_FLOAT128 0\n#define FMT_USE_INT128 0\n'
           patched = 0
-          for path in glob.glob('apps/driver-app/ios/Pods/fmt/include/fmt/*.h'):
+          for path in (
+              glob.glob('apps/driver-app/ios/Pods/fmt/include/fmt/*.h') +
+              glob.glob('apps/driver-app/ios/Pods/fmt/src/*.cc')
+          ):
               with open(path, 'r') as f:
                   c = f.read()
               if guard not in c:
                   with open(path, 'w') as f:
                       f.write(guard + c)
+                  print(f'  patched: {path}')
                   patched += 1
-          print(f'✅ Patched {patched} fmt headers with FMT_USE_FLOAT128=0')
+          print(f'✅ Patched {patched} fmt files with FMT_USE_FLOAT128=0 FMT_USE_INT128=0')
           PYEOF
 
       - name: Detect Xcode workspace
@@ -977,6 +983,7 @@ workflows:
             --config Release
 
       - name: Upload to TestFlight
+        ignore_failure: true
         script: |
           printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
           chmod 600 /tmp/asc_key.p8

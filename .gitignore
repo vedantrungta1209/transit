@@ -12,7 +12,13 @@ infra/certbot/
 coverage/
 .expo/
 apps/*/android/
-apps/*/ios/
+# ios/ is committed so Xcode Cloud can find the Xcode project in App Store Connect.
+# expo prebuild --clean regenerates it on each CI run; Pods/ and build artifacts are ignored.
+apps/*/ios/Pods/
+apps/*/ios/build/
+apps/*/ios/DerivedData/
+apps/*/ios/.xcode.env.local
+apps/*/ios/*.xcworkspace/xcuserdata/
 *.keystore
 .DS_Store
 google-services.json

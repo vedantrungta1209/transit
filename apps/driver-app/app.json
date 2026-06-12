@@ -12,7 +12,13 @@
     },
     "ios": {
       "bundleIdentifier": "in.transitco.driver",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Transit Driver needs access to your photo library to upload your documents and profile photo.",
+        "NSPhotoLibraryAddUsageDescription": "Transit Driver needs permission to save photos to your library.",
+        "NSCameraUsageDescription": "Transit Driver needs access to your camera to scan QR codes and capture documents.",
+        "NSMicrophoneUsageDescription": "Transit Driver needs access to your microphone for video recording."
+      }
     },
     "android": {
       "package": "in.transitco.driver",

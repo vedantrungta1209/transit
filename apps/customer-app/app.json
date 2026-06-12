@@ -12,7 +12,11 @@
     },
     "ios": {
       "bundleIdentifier": "in.transitco.customer",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Transit needs access to your photo library to upload payment documents.",
+        "NSCameraUsageDescription": "Transit needs access to your camera to scan QR codes and upload documents."
+      }
     },
     "android": {
       "package": "in.transitco.customer",

@@ -671,17 +671,32 @@ workflows:
           chmod -R u+w apps/customer-app/ios/Pods/fmt/
           python3 << 'PYEOF'
           import glob
-          guard = '#ifndef FMT_USE_FLOAT128\n#define FMT_USE_FLOAT128 0\n#endif\n'
+          guard = '#define FMT_USE_FLOAT128 0\n'
           patched = 0
-          for path in glob.glob('apps/customer-app/ios/Pods/fmt/include/fmt/*.h'):
+          for path in (
+              glob.glob('apps/customer-app/ios/Pods/fmt/include/fmt/*.h') +
+              glob.glob('apps/customer-app/ios/Pods/fmt/src/*.cc')
+          ):
               with open(path, 'r') as f:
                   c = f.read()
               if guard not in c:
                   with open(path, 'w') as f:
                       f.write(guard + c)
+                  print(f'  patched: {path}')
                   patched += 1
-          print(f'✅ Patched {patched} fmt headers with FMT_USE_FLOAT128=0')
+          print(f'✅ Patched {patched} fmt files with FMT_USE_FLOAT128=0')
           PYEOF
+          # Diagnostic: capture actual clang error for fmt
+          echo "--- fmt compile diagnostic ---"
+          cd apps/customer-app/ios
+          xcodebuild build \
+            -workspace Transit.xcworkspace \
+            -scheme Transit \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            ONLY_ACTIVE_ARCH=NO \
+            2>&1 | grep -E "error:|fmt/|format\.cc" | head -30 || true
 
       - name: Detect Xcode workspace
         script: |

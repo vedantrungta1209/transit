@@ -331,6 +331,7 @@ workflows:
           ./gradlew bundleRelease -PreactNativeArchitectures=arm64-v8a,armeabi-v7a --stacktrace 2>&1
 
       - name: Upload to Play Store (internal)
+        ignore_failure: true
         script: |
           printf '%s' "$GPLAY_SA_JSON" > /tmp/gplay_key.json
           if ! python3 -c "import json,sys; d=json.load(open('/tmp/gplay_key.json')); assert d.get('type')=='service_account'" 2>/dev/null; then
@@ -484,6 +485,7 @@ workflows:
           ./gradlew bundleRelease -PreactNativeArchitectures=arm64-v8a,armeabi-v7a --stacktrace 2>&1
 
       - name: Upload to Play Store (internal)
+        ignore_failure: true
         script: |
           printf '%s' "$GPLAY_SA_JSON" > /tmp/gplay_key.json
           if ! python3 -c "import json,sys; d=json.load(open('/tmp/gplay_key.json')); assert d.get('type')=='service_account'" 2>/dev/null; then
@@ -637,6 +639,10 @@ workflows:
               '      c.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'15.1\' if min.to_f < 15.1\n'
               "      if t.name == 'react-native-razorpay'\n"
               "        c.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'\n"
+              "      end\n"
+              "      if t.name == 'fmt'\n"
+              "        c.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'\n"
+              "        c.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'\n"
               "      end\n"
               '    end\n'
               '  end\n'
@@ -797,6 +803,10 @@ workflows:
               '      c.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'15.1\' if min.to_f < 15.1\n'
               "      if t.name == 'react-native-razorpay'\n"
               "        c.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'\n"
+              "      end\n"
+              "      if t.name == 'fmt'\n"
+              "        c.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'\n"
+              "        c.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'\n"
               "      end\n"
               '    end\n'
               '  end\n'

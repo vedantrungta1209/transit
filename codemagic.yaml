@@ -666,6 +666,24 @@ workflows:
           cd apps/customer-app/ios
           pod install --verbose 2>&1
 
+      - name: Patch fmt sources
+        script: |
+          python3 << 'PYEOF'
+          import os, glob
+          # fmt 7.x uses __float128 which clang on Apple Silicon rejects.
+          # Inject the define at the top of every fmt header after pod install.
+          guard = '#ifndef FMT_USE_FLOAT128\n#define FMT_USE_FLOAT128 0\n#endif\n'
+          patched = 0
+          for path in glob.glob('apps/customer-app/ios/Pods/fmt/include/fmt/*.h'):
+              with open(path, 'r') as f:
+                  c = f.read()
+              if guard not in c:
+                  with open(path, 'w') as f:
+                      f.write(guard + c)
+                  patched += 1
+          print(f'✅ Patched {patched} fmt headers with FMT_USE_FLOAT128=0')
+          PYEOF
+
       - name: Detect Xcode workspace
         script: |
           WS=$(find apps/customer-app/ios -name "*.xcworkspace" -maxdepth 2 ! -path "*.xcodeproj/*" | head -1)
@@ -831,6 +849,22 @@ workflows:
           export NODE_PATH="$PWD/node_modules:$PWD/apps/driver-app/node_modules"
           cd apps/driver-app/ios
           pod install --verbose 2>&1
+
+      - name: Patch fmt sources
+        script: |
+          python3 << 'PYEOF'
+          import os, glob
+          guard = '#ifndef FMT_USE_FLOAT128\n#define FMT_USE_FLOAT128 0\n#endif\n'
+          patched = 0
+          for path in glob.glob('apps/driver-app/ios/Pods/fmt/include/fmt/*.h'):
+              with open(path, 'r') as f:
+                  c = f.read()
+              if guard not in c:
+                  with open(path, 'w') as f:
+                      f.write(guard + c)
+                  patched += 1
+          print(f'✅ Patched {patched} fmt headers with FMT_USE_FLOAT128=0')
+          PYEOF
 
       - name: Detect Xcode workspace
         script: |

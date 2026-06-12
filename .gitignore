@@ -11,9 +11,8 @@ infra/certbot/
 *.log
 coverage/
 .expo/
-# Allow committed native folders in apps
-!apps/*/android/
-!apps/*/ios/
+apps/*/android/
+apps/*/ios/
 *.keystore
 .DS_Store
 google-services.json

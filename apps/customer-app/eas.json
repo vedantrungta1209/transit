@@ -6,11 +6,11 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "node": "20.17.0"
+      "node": "20.19.4"
     },
     "preview": {
       "distribution": "internal",
-      "node": "20.17.0",
+      "node": "20.19.4",
       "android": {
         "buildType": "apk"
       },
@@ -24,7 +24,7 @@
       }
     },
     "production": {
-      "node": "20.17.0",
+      "node": "20.19.4",
       "android": {
         "buildType": "app-bundle"
       },
@@ -39,6 +39,13 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "vedantrungta@gmail.com"
+      },
+      "android": {
+        "track": "internal"
+      }
+    }
   }
 }

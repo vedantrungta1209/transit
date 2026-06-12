@@ -762,7 +762,6 @@ workflows:
             --config Release
 
       - name: Upload to TestFlight
-        ignore_failure: true
         script: |
           printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
           chmod 600 /tmp/asc_key.p8
@@ -770,8 +769,7 @@ workflows:
             --path "$(find build/ios/ipa -name '*.ipa' | head -1)" \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --private-key @file:/tmp/asc_key.p8 \
-            --testflight
+            --private-key @file:/tmp/asc_key.p8
 
     artifacts:
       - build/ios/ipa/*.ipa
@@ -983,7 +981,6 @@ workflows:
             --config Release
 
       - name: Upload to TestFlight
-        ignore_failure: true
         script: |
           printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/asc_key.p8
           chmod 600 /tmp/asc_key.p8
@@ -991,8 +988,7 @@ workflows:
             --path "$(find build/ios/ipa -name '*.ipa' | head -1)" \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --private-key @file:/tmp/asc_key.p8 \
-            --testflight
+            --private-key @file:/tmp/asc_key.p8
 
     artifacts:
       - build/ios/ipa/*.ipa

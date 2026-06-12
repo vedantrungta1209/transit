@@ -30,7 +30,8 @@
       },
       "ios": {
         "image": "latest",
-        "buildConfiguration": "Release"
+        "buildConfiguration": "Release",
+        "autoIncrement": true
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://transit-api.transitco.in",

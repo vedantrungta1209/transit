@@ -44,7 +44,8 @@
         "ascAppId": "6777676736"
       },
       "android": {
-        "track": "internal"
+        "track": "internal",
+        "serviceAccountKeyPath": "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"
       }
     }
   }

@@ -492,30 +492,94 @@ workflows:
           else:
               print('ℹ️ ExpoModulesCorePlugin.gradle already patched or pattern not found')
 
-          # Patch 3: Fix expo-image-loader/expo-image-picker declarative plugins{} block.
-          # Root cause: useExpoModules() in settings.gradle registers expo-modules-core as
-          # an includeBuild AFTER pluginManagement{}, so the plugin IS on the classpath at
-          # configuration time but NOT resolvable via declarative plugins{} at settings time.
-          # Fix: convert to legacy apply plugin: style which runs at configuration time.
-          for pkg_path in [
-              'node_modules/expo-image-loader/android/build.gradle',
-              'node_modules/expo-image-picker/android/build.gradle',
-          ]:
+          # Patch 3: Fix expo-image-loader and expo-image-picker — expo-module-gradle-plugin
+          # is not on the Gradle classpath at all (useExpoModules() registers it too late).
+          # Fully replace the plugin with equivalent direct configuration.
+
+          image_loader_content = """apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+group = 'host.exp.exponent'
+version = '5.1.0'
+
+android {
+  namespace "expo.modules.imageloader"
+  compileSdk rootProject.ext.compileSdkVersion ?: 35
+  defaultConfig {
+    minSdk rootProject.ext.minSdkVersion ?: 23
+    versionCode 8
+    versionName "5.1.0"
+  }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_11
+    targetCompatibility JavaVersion.VERSION_11
+  }
+  kotlinOptions {
+    jvmTarget = '11'
+  }
+}
+
+def glideVersion = '4.16.0'
+
+dependencies {
+  api "com.github.bumptech.glide:glide:${glideVersion}"
+}
+"""
+
+          image_picker_content = """apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+group = 'host.exp.exponent'
+version = '16.1.4'
+
+android {
+  namespace "expo.modules.imagepicker"
+  compileSdk rootProject.ext.compileSdkVersion ?: 35
+  defaultConfig {
+    minSdk rootProject.ext.minSdkVersion ?: 23
+    versionCode 22
+    versionName "16.1.4"
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+  }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_11
+    targetCompatibility JavaVersion.VERSION_11
+  }
+  kotlinOptions {
+    jvmTarget = '11'
+  }
+  testOptions {
+    unitTests.includeAndroidResources = true
+  }
+}
+
+dependencies {
+  implementation "androidx.activity:activity-ktx:1.10.0"
+  implementation "androidx.appcompat:appcompat:1.7.0"
+  implementation "androidx.exifinterface:exifinterface:1.3.7"
+  implementation "com.vanniktech:android-image-cropper:4.6.0"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3"
+
+  if (project.findProject(':expo-modules-test-core')) {
+    androidTestImplementation project(':expo-modules-test-core')
+  }
+}
+"""
+
+          patches = {
+              'node_modules/expo-image-loader/android/build.gradle': image_loader_content,
+              'node_modules/expo-image-picker/android/build.gradle': image_picker_content,
+          }
+          for pkg_path, new_content in patches.items():
               with open(pkg_path, 'r') as f:
                   content = f.read()
-              if "id 'expo-module-gradle-plugin'" not in content and 'id("expo-module-gradle-plugin")' not in content:
+              if "expo-module-gradle-plugin" not in content:
                   print(f'ℹ️ {pkg_path} already patched')
                   continue
-              # Convert declarative plugins{} to legacy apply plugin: style
-              patched = re.sub(
-                  r"plugins\s*\{[^}]+\}",
-                  "apply plugin: 'com.android.library'\napply plugin: 'expo-module-gradle-plugin'",
-                  content,
-                  flags=re.DOTALL
-              )
               with open(pkg_path, 'w') as f:
-                  f.write(patched)
-              print(f'✅ {pkg_path} plugins block converted to legacy apply plugin: style')
+                  f.write(new_content)
+              print(f'✅ {pkg_path} fully replaced — expo-module-gradle-plugin removed')
           PYEOF
 
       - name: Build AAB

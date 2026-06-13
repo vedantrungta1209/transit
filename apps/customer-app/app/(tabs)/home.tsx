@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, TextInput, Alert, StyleSheet,
-  FlatList, ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, ScrollView,
+  FlatList, ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
-import axios from 'axios';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useAuthStore } from '../../src/stores/auth';
 import { useBookingStore } from '../../src/stores/booking';
@@ -18,18 +17,19 @@ import SearchingView from '../../src/components/SearchingView';
 import DriverAssignedView from '../../src/components/DriverAssignedView';
 import ActiveRideCustomerView from '../../src/components/ActiveRideCustomerView';
 
-const MAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY!;
-
 interface Prediction {
   place_id: string;
   description: string;
   structured_formatting: { main_text: string; secondary_text: string };
 }
 
-function PinIcon() {
+type SearchMode = 'pickup' | 'drop' | null;
+
+// ─── Icons ───────────────────────────────────────────────────────────────────
+function PinIcon({ color = T.AMBER_DEEP }: { color?: string }) {
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-      <Path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z M12 10.5a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6z" stroke={T.AMBER_DEEP} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z M12 10.5a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6z" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -55,33 +55,32 @@ function LocationDotIcon() {
     </Svg>
   );
 }
-
-async function reverseGeocode(lat: number, lng: number): Promise<string> {
-  try {
-    const res = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
-      params: { latlng: `${lat},${lng}`, key: MAPS_KEY, result_type: 'street_address|route|sublocality' },
-    });
-    const result = res.data.results[0];
-    if (!result) return 'Current Location';
-    const parts = result.address_components.slice(0, 3).map((c: any) => c.short_name);
-    return parts.join(', ');
-  } catch {
-    return 'Current Location';
-  }
+function EditIcon() {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+      <Path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke={T.TEXT_FAINT} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke={T.TEXT_FAINT} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
 }
 
 export default function HomeScreen() {
   const { token, user } = useAuthStore();
   const { step, pickup, drop, ride, driver, driverLocation, setStep, setPickup, setDrop, setRide, setDriver, setDriverLocation, reset } = useBookingStore();
+
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [dropSearch, setDropSearch] = useState('');
+  const [searchMode, setSearchMode] = useState<SearchMode>(null);
+  const [searchText, setSearchText] = useState('');
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [dropFocused, setDropFocused] = useState(false);
+  const [dropDisplayText, setDropDisplayText] = useState('');
+
   const mapRef = useRef<MapView>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<TextInput>(null);
+  const dropInputRef = useRef<TextInput>(null);
 
-  // Get GPS + reverse geocode pickup
+  // ── Get GPS + reverse geocode pickup ──────────────────────────────────────
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -97,12 +96,20 @@ export default function HomeScreen() {
         latitudeDelta: 0.05,
         longitudeDelta: 0.05,
       }, 600);
-      const address = await reverseGeocode(loc.coords.latitude, loc.coords.longitude);
+
+      // Use device-native reverse geocoding — no API key or quota needed
+      const [geo] = await Location.reverseGeocodeAsync({
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      });
+      const parts = [geo?.street, geo?.district || geo?.subregion, geo?.city]
+        .filter(Boolean);
+      const address = parts.length > 0 ? parts.join(', ') : `${loc.coords.latitude.toFixed(4)}, ${loc.coords.longitude.toFixed(4)}`;
       setPickup({ lat: loc.coords.latitude, lng: loc.coords.longitude, address });
     })();
   }, []);
 
-  // Socket events
+  // ── Socket events ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!token) return;
     const socket = getSocket(token);
@@ -114,36 +121,29 @@ export default function HomeScreen() {
     });
     socket.on('driver_location', (data) => setDriverLocation({ lat: data.lat, lng: data.lng }));
     socket.on('ride_completed', () => setStep('completed'));
-    socket.on('no_drivers_found', () => { Alert.alert('No drivers', 'No drivers available nearby. Try again in a few minutes.'); setStep('idle'); });
+    socket.on('no_drivers_found', () => { Alert.alert('No drivers', 'No drivers nearby. Try again in a few minutes.'); setStep('idle'); });
     return () => {
       socket.off('driver_assigned'); socket.off('ride_status_update');
       socket.off('driver_location'); socket.off('ride_completed'); socket.off('no_drivers_found');
     };
   }, [token]);
 
+  // ── Place search via server proxy (avoids client-side API key restrictions) ─
   const searchPlaces = useCallback((text: string) => {
-    setDropSearch(text);
+    setSearchText(text);
     setPredictions([]);
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    if (text.length < 2) return;
+    if (text.length < 2) { setSearchLoading(false); return; }
+
     searchTimeout.current = setTimeout(async () => {
       setSearchLoading(true);
       try {
-        const res = await axios.get('https://maps.googleapis.com/maps/api/place/autocomplete/json', {
-          params: {
-            input: text,
-            key: MAPS_KEY,
-            components: 'country:in',
-            language: 'en',
-            types: 'geocode|establishment',
-            ...(location ? { location: `${location.coords.latitude},${location.coords.longitude}`, radius: 50000 } : {}),
-          },
-        });
-        if (res.data.status === 'OK' || res.data.status === 'ZERO_RESULTS') {
-          setPredictions(res.data.predictions || []);
-        }
-      } catch (e) {
-        // Network error — silent
+        const params: any = { input: text };
+        if (location) { params.lat = location.coords.latitude; params.lng = location.coords.longitude; }
+        const res = await api.get('/places/autocomplete', { params });
+        setPredictions(res.data.data?.predictions || []);
+      } catch {
+        setPredictions([]);
       }
       setSearchLoading(false);
     }, 350);
@@ -151,28 +151,58 @@ export default function HomeScreen() {
 
   async function selectPrediction(p: Prediction) {
     Keyboard.dismiss();
-    setDropSearch(p.description);
     setPredictions([]);
-    setDropFocused(false);
     try {
-      const res = await axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
-        params: { place_id: p.place_id, key: MAPS_KEY, fields: 'geometry,formatted_address' },
-      });
-      const loc = res.data.result?.geometry?.location;
-      if (!loc) { Alert.alert('Error', 'Could not get location details. Try again.'); return; }
-      setDrop({ lat: loc.lat, lng: loc.lng, address: p.description });
-      setStep('selecting');
-      if (pickup) {
+      const res = await api.get('/places/details', { params: { place_id: p.place_id } });
+      const loc = res.data.data;
+      if (!loc) { Alert.alert('Error', 'Could not resolve location. Try again.'); return; }
+
+      const address = p.description;
+
+      if (searchMode === 'pickup') {
+        setPickup({ lat: loc.lat, lng: loc.lng, address });
+        setSearchMode(null);
+        setSearchText('');
         mapRef.current?.animateToRegion({
-          latitude: (pickup.lat + loc.lat) / 2,
-          longitude: (pickup.lng + loc.lng) / 2,
-          latitudeDelta: Math.abs(pickup.lat - loc.lat) * 2.5 + 0.03,
-          longitudeDelta: Math.abs(pickup.lng - loc.lng) * 2.5 + 0.03,
+          latitude: loc.lat, longitude: loc.lng,
+          latitudeDelta: 0.05, longitudeDelta: 0.05,
         }, 600);
+      } else {
+        setDrop({ lat: loc.lat, lng: loc.lng, address });
+        setDropDisplayText(address);
+        setSearchMode(null);
+        setSearchText('');
+        setStep('selecting');
+        if (pickup) {
+          mapRef.current?.animateToRegion({
+            latitude: (pickup.lat + loc.lat) / 2,
+            longitude: (pickup.lng + loc.lng) / 2,
+            latitudeDelta: Math.abs(pickup.lat - loc.lat) * 2.5 + 0.03,
+            longitudeDelta: Math.abs(pickup.lng - loc.lng) * 2.5 + 0.03,
+          }, 600);
+        }
       }
     } catch {
       Alert.alert('Error', 'Could not resolve this location. Please try again.');
     }
+  }
+
+  function openSearch(mode: SearchMode) {
+    const initial = mode === 'pickup' ? (pickup?.address || '') : dropDisplayText;
+    setSearchMode(mode);
+    setSearchText(initial);
+    setPredictions([]);
+    setTimeout(() => {
+      if (mode === 'pickup') searchInputRef.current?.focus();
+      else dropInputRef.current?.focus();
+    }, 100);
+  }
+
+  function closeSearch() {
+    setSearchMode(null);
+    setSearchText('');
+    setPredictions([]);
+    Keyboard.dismiss();
   }
 
   async function handleBookRide(vehicleType: string, paymentMethod: string) {
@@ -193,9 +223,7 @@ export default function HomeScreen() {
 
   async function cancelRide() {
     if (!ride) return;
-    try {
-      await api.patch(`/rides/${ride.id}/cancel`, { cancelledBy: user?.id, reason: 'User cancelled' });
-    } catch { /* silent */ }
+    try { await api.patch(`/rides/${ride.id}/cancel`, { cancelledBy: user?.id, reason: 'User cancelled' }); } catch { /* silent */ }
     reset();
   }
 
@@ -206,46 +234,44 @@ export default function HomeScreen() {
     longitudeDelta: 0.05,
   };
 
+  // ── Step screens ───────────────────────────────────────────────────────────
   if (step === 'searching') return <SearchingView onCancel={cancelRide} />;
   if (step === 'assigned' || step === 'arriving') return <DriverAssignedView driver={driver} ride={ride} driverLocation={driverLocation} onCancel={cancelRide} />;
   if (step === 'in_progress') return <ActiveRideCustomerView ride={ride} driver={driver} driverLocation={driverLocation} />;
-
-  if (step === 'completed') {
-    return (
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: T.PAPER, paddingHorizontal: 20, paddingTop: 60, alignItems: 'center' }]}>
-        <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: T.SUCCESS_SOFT, alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-          <Svg width={30} height={30} viewBox="0 0 24 24" fill="none">
-            <Path d="M5 12.5l4.5 4.5L19 7" stroke={T.SUCCESS} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
-          </Svg>
-        </View>
-        <Text style={s.arrivedTitle}>You've arrived</Text>
-        <Text style={s.arrivedSub}>Fare: ₹{ride?.actualFare?.toLocaleString('en-IN')}</Text>
-        <View style={[s.card, { width: '100%', marginTop: 20 }]}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
-            <Text style={s.eyebrow}>Receipt</Text>
-            <Text style={s.mono}>#TR-{ride?.id?.slice(-5).toUpperCase()}</Text>
-          </View>
-          {[['Ride fare', ride?.actualFare], ['Booking fee', 6]].map(([l, v]) => (
-            <View key={l as string} style={s.receiptRow}>
-              <Text style={s.receiptLabel}>{l as string}</Text>
-              <Text style={s.receiptVal}>{v ? `₹${Number(v).toLocaleString('en-IN')}` : '—'}</Text>
-            </View>
-          ))}
-          <View style={s.dashed} />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6 }}>
-            <Text style={[s.bold16, { color: T.TEXT }]}>Total</Text>
-            <Text style={[s.bold22, { color: T.TEXT }]}>₹{(Number(ride?.actualFare || 0) + 6).toLocaleString('en-IN')}</Text>
-          </View>
-        </View>
-        <TouchableOpacity onPress={reset} style={[s.amberBtn, { marginTop: 20, width: '100%' }]}>
-          <Text style={s.amberBtnText}>Done</Text>
-        </TouchableOpacity>
+  if (step === 'completed') return (
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: T.PAPER, paddingHorizontal: 20, paddingTop: 60, alignItems: 'center' }]}>
+      <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: T.SUCCESS_SOFT, alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+        <Svg width={30} height={30} viewBox="0 0 24 24" fill="none">
+          <Path d="M5 12.5l4.5 4.5L19 7" stroke={T.SUCCESS} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+        </Svg>
       </View>
-    );
-  }
+      <Text style={s.arrivedTitle}>You've arrived!</Text>
+      <Text style={s.arrivedSub}>Fare: ₹{ride?.actualFare?.toLocaleString('en-IN')}</Text>
+      <View style={[s.card, { width: '100%', marginTop: 20 }]}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
+          <Text style={s.eyebrow}>Receipt</Text>
+          <Text style={s.mono}>#TR-{ride?.id?.slice(-5).toUpperCase()}</Text>
+        </View>
+        {[['Ride fare', ride?.actualFare], ['Booking fee', 6]].map(([l, v]: any[]) => (
+          <View key={l} style={s.receiptRow}>
+            <Text style={s.receiptLabel}>{l}</Text>
+            <Text style={s.receiptVal}>{v ? `₹${Number(v).toLocaleString('en-IN')}` : '—'}</Text>
+          </View>
+        ))}
+        <View style={s.dashed} />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6 }}>
+          <Text style={[s.bold16, { color: T.TEXT }]}>Total</Text>
+          <Text style={[s.bold22, { color: T.TEXT }]}>₹{(Number(ride?.actualFare || 0) + 6).toLocaleString('en-IN')}</Text>
+        </View>
+      </View>
+      <TouchableOpacity onPress={reset} style={[s.amberBtn, { marginTop: 20, width: '100%' }]}>
+        <Text style={s.amberBtnText}>Done</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
-  const showPredictions = predictions.length > 0 && dropFocused;
-  const showVehicles = step === 'selecting' && drop && !showPredictions;
+  const showPredictions = predictions.length > 0 || searchLoading;
+  const showVehicles = step === 'selecting' && drop && searchMode === null;
 
   return (
     <View style={{ flex: 1 }}>
@@ -262,71 +288,157 @@ export default function HomeScreen() {
         {drop && <Marker coordinate={{ latitude: drop.lat, longitude: drop.lng }} pinColor={T.AMBER} />}
       </MapView>
 
-      {/* Top bar — pickup location */}
+      {/* ── Top bar — Pickup location ─────────────────────────────────────── */}
       <SafeAreaView edges={['top']} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
         <View style={s.topBar}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-            <PinIcon />
-            <View style={{ flex: 1 }}>
-              <Text style={s.topBarLabel}>Pickup</Text>
-              <Text style={s.topBarCity} numberOfLines={1}>
-                {pickup ? pickup.address : 'Locating your position…'}
-              </Text>
+          {searchMode === 'pickup' ? (
+            // Pickup search input
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <PinIcon color={T.NAVY} />
+              <TextInput
+                ref={searchInputRef}
+                value={searchText}
+                onChangeText={searchPlaces}
+                placeholder="Search pickup location"
+                placeholderTextColor={T.TEXT_FAINT}
+                style={[s.topBarInput]}
+                returnKeyType="search"
+                autoCorrect={false}
+              />
+              {searchLoading && <ActivityIndicator size="small" color={T.AMBER_DEEP} />}
+              <TouchableOpacity onPress={closeSearch} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Text style={{ color: T.TEXT_FAINT, fontSize: 17 }}>✕</Text>
+              </TouchableOpacity>
             </View>
-          </View>
-          <TouchableOpacity style={s.avatar}>
-            <Text style={s.avatarText}>{user?.name ? user.name.slice(0, 2).toUpperCase() : 'ME'}</Text>
-          </TouchableOpacity>
+          ) : (
+            // Pickup display — tap to edit
+            <TouchableOpacity
+              style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}
+              onPress={() => openSearch('pickup')}
+              activeOpacity={0.7}
+            >
+              <PinIcon color={T.AMBER_DEEP} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.topBarLabel}>Pickup</Text>
+                <Text style={s.topBarCity} numberOfLines={1}>
+                  {pickup ? pickup.address : 'Locating your position…'}
+                </Text>
+              </View>
+              <EditIcon />
+            </TouchableOpacity>
+          )}
+          {searchMode !== 'pickup' && (
+            <TouchableOpacity style={s.avatar}>
+              <Text style={s.avatarText}>{user?.name ? user.name.slice(0, 2).toUpperCase() : 'ME'}</Text>
+            </TouchableOpacity>
+          )}
         </View>
+
+        {/* Pickup prediction list — shown under top bar */}
+        {searchMode === 'pickup' && showPredictions && (
+          <View style={s.topPredictions}>
+            {searchLoading && predictions.length === 0 && (
+              <View style={{ padding: 16, alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={T.AMBER_DEEP} />
+              </View>
+            )}
+            {predictions.map((item, index) => (
+              <TouchableOpacity
+                key={item.place_id}
+                style={[s.predictionRow, index > 0 && { borderTopWidth: 1, borderTopColor: T.LINE }]}
+                onPress={() => selectPrediction(item)}
+              >
+                <View style={s.predictionIcon}><LocationDotIcon /></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.predictionMain} numberOfLines={1}>
+                    {item.structured_formatting?.main_text || item.description}
+                  </Text>
+                  <Text style={s.predictionSub} numberOfLines={1}>
+                    {item.structured_formatting?.secondary_text}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </SafeAreaView>
 
-      {/* Bottom area with KeyboardAvoidingView */}
+      {/* ── Bottom sheet ──────────────────────────────────────────────────── */}
       <KeyboardAvoidingView
         style={s.kavWrapper}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         <View style={s.sheet}>
           <View style={s.sheetHandle} />
 
-          {/* Drop search */}
-          <View style={s.searchBox}>
+          {/* Drop search input */}
+          <View style={[s.searchBox, searchMode === 'drop' && { borderColor: T.AMBER, borderWidth: 1.5 }]}>
             <SearchIcon />
             <TextInput
-              value={dropSearch}
-              onChangeText={searchPlaces}
-              onFocus={() => setDropFocused(true)}
-              onBlur={() => setTimeout(() => setDropFocused(false), 200)}
+              ref={dropInputRef}
+              value={searchMode === 'drop' ? searchText : dropDisplayText}
+              onChangeText={(text) => {
+                if (searchMode !== 'drop') {
+                  setDropDisplayText(text);
+                  setSearchMode('drop');
+                }
+                searchPlaces(text);
+              }}
+              onFocus={() => {
+                if (searchMode !== 'drop') {
+                  setSearchMode('drop');
+                  setSearchText(dropDisplayText);
+                  searchPlaces(dropDisplayText);
+                }
+              }}
+              onBlur={() => {
+                if (!predictions.length) {
+                  setTimeout(() => {
+                    if (searchMode === 'drop') setSearchMode(null);
+                  }, 200);
+                }
+              }}
               placeholder="Where to?"
               placeholderTextColor={T.TEXT_FAINT}
               style={s.searchInput}
               returnKeyType="search"
               autoCorrect={false}
             />
-            {searchLoading && <ActivityIndicator size="small" color={T.AMBER_DEEP} />}
-            {dropSearch.length > 0 && !searchLoading && (
-              <TouchableOpacity onPress={() => { setDropSearch(''); setPredictions([]); setDrop(null); setStep('idle'); }}>
+            {searchMode === 'drop' && searchLoading && <ActivityIndicator size="small" color={T.AMBER_DEEP} />}
+            {(searchMode === 'drop' ? searchText : dropDisplayText).length > 0 && !searchLoading && (
+              <TouchableOpacity onPress={() => {
+                setDropDisplayText('');
+                setSearchText('');
+                setPredictions([]);
+                setDrop(null);
+                setStep('idle');
+                setSearchMode(null);
+              }}>
                 <Text style={{ color: T.TEXT_FAINT, fontSize: 18, lineHeight: 20 }}>✕</Text>
               </TouchableOpacity>
             )}
           </View>
 
-          {/* Autocomplete list */}
-          {showPredictions && (
+          {/* Autocomplete list for drop */}
+          {searchMode === 'drop' && showPredictions && (
             <View style={s.predictionsContainer}>
+              {searchLoading && predictions.length === 0 && (
+                <View style={{ padding: 14, alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color={T.AMBER_DEEP} />
+                </View>
+              )}
               <FlatList
                 data={predictions}
                 keyExtractor={p => p.place_id}
                 keyboardShouldPersistTaps="handled"
-                scrollEnabled={false}
+                scrollEnabled={predictions.length > 4}
+                style={{ maxHeight: 240 }}
                 renderItem={({ item, index }) => (
                   <TouchableOpacity
                     style={[s.predictionRow, index > 0 && { borderTopWidth: 1, borderTopColor: T.LINE }]}
                     onPress={() => selectPrediction(item)}
                   >
-                    <View style={s.predictionIcon}>
-                      <LocationDotIcon />
-                    </View>
+                    <View style={s.predictionIcon}><LocationDotIcon /></View>
                     <View style={{ flex: 1 }}>
                       <Text style={s.predictionMain} numberOfLines={1}>
                         {item.structured_formatting?.main_text || item.description}
@@ -341,18 +453,18 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* Vehicle select */}
+          {/* Vehicle select + fare */}
           {showVehicles && (
             <VehicleSelectSheet
               pickup={pickup!}
               drop={drop}
               onBook={handleBookRide}
-              onBack={() => { setStep('idle'); setDropSearch(''); setDrop(null); }}
+              onBack={() => { setStep('idle'); setDropDisplayText(''); setDrop(null); }}
             />
           )}
 
           {/* Default idle state */}
-          {!showPredictions && !showVehicles && (
+          {!showPredictions && !showVehicles && searchMode !== 'pickup' && (
             <View style={s.promoBanner}>
               <ShieldIcon />
               <View>
@@ -380,6 +492,13 @@ const s = StyleSheet.create({
   },
   topBarLabel: { fontSize: 9, fontWeight: '600', letterSpacing: 1.6, color: T.TEXT_FAINT, textTransform: 'uppercase' },
   topBarCity: { fontSize: 14, fontWeight: '600', color: T.TEXT },
+  topBarInput: { flex: 1, fontSize: 14, fontWeight: '600', color: T.TEXT, paddingVertical: 2 },
+  topPredictions: {
+    marginHorizontal: 16, marginTop: 4,
+    backgroundColor: T.SURFACE, borderRadius: T.R_MD,
+    borderWidth: 1, borderColor: T.LINE,
+    overflow: 'hidden', ...T.SHADOW_MD,
+  },
   avatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: T.NAVY, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: '#fff', fontWeight: '600', fontSize: 14 },
   sheet: {

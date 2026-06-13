@@ -10,6 +10,7 @@ import driverRoutes from './routes/driver.routes';
 import userRoutes from './routes/user.routes';
 import adminRoutes from './routes/admin.routes';
 import webhookRoutes from './routes/webhook.routes';
+import placesRoutes from './routes/places.routes';
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use('/api/drivers', driverRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/places', placesRoutes);
 
 app.use(errorHandler);
 

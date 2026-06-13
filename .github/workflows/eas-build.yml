@@ -17,12 +17,7 @@ name: EAS Build + Submit
 #   driver-v*            → Driver iOS (TestFlight) + Android AAB (Play Store internal)
 
 on:
-  push:
-    tags:
-      - 'customer-v*'
-      - 'customer-preview-v*'
-      - 'driver-v*'
-      - 'driver-preview-v*'
+  workflow_dispatch: # disabled — builds handled by Codemagic
 
 jobs:
   # ───────────────────────────────────────────────────────────────────────────

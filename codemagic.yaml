@@ -460,7 +460,7 @@ workflows:
       - name: Patch expo-modules-core Kotlin
         script: |
           python3 << 'PYEOF'
-          import re
+          import re, os
 
           # Patch 1: PermissionsService.kt null-safety
           path = 'node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/permissions/PermissionsService.kt'
@@ -477,22 +477,37 @@ workflows:
           else:
               print('ℹ️ PermissionsService.kt already patched or pattern not found')
 
-          # Patch 2: Fix SoftwareComponent 'release' for AGP 8.x
-          gradle_path = 'node_modules/expo-modules-core/android/build.gradle'
-          with open(gradle_path, 'r') as f:
+          # Patch 2: Fix SoftwareComponent 'release' in ExpoModulesCorePlugin.gradle (AGP 8.x)
+          plugin_path = 'node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle'
+          with open(plugin_path, 'r') as f:
               content = f.read()
           patched = content.replace(
               'from components.release',
-              'from(components.findByName("release") ?: return@afterEvaluate)'
+              'from(components.findByName("release") ?: null)'
           )
-          if patched == content:
-              patched = re.sub(r'\bcomponents\.release\b', 'components.findByName("release")', content)
           if patched != content:
-              with open(gradle_path, 'w') as f:
+              with open(plugin_path, 'w') as f:
                   f.write(patched)
-              print('✅ expo-modules-core build.gradle SoftwareComponent patched')
+              print('✅ ExpoModulesCorePlugin.gradle SoftwareComponent patched')
           else:
-              print('ℹ️ expo-modules-core build.gradle already patched or pattern not found')
+              print('ℹ️ ExpoModulesCorePlugin.gradle already patched or pattern not found')
+
+          # Patch 3: Fix expo-image-loader expo-module-gradle-plugin not found
+          # Add includeBuild to settings.gradle so expo-module-gradle-plugin resolves
+          settings_path = 'apps/driver-app/android/settings.gradle'
+          with open(settings_path, 'r') as f:
+              content = f.read()
+          plugin_include = '\n  includeBuild(new File(["node", "--print", "require.resolve(\'expo-modules-core/package.json\')"].execute(null, rootDir).text.trim()).getParentFile().toString() + "/android")\n'
+          if 'expo-modules-core' not in content and 'pluginManagement' in content:
+              patched = content.replace(
+                  'pluginManagement {',
+                  'pluginManagement {' + plugin_include
+              )
+              with open(settings_path, 'w') as f:
+                  f.write(patched)
+              print('✅ settings.gradle expo-modules-core includeBuild added')
+          else:
+              print('ℹ️ settings.gradle already has expo-modules-core or no pluginManagement block')
           PYEOF
 
       - name: Build AAB

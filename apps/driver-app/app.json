@@ -51,6 +51,13 @@
           "locationAlwaysAndWhenInUsePermission": "Transit needs your location to match you with nearby riders."
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Transit Driver needs access to your photos to upload KYC documents.",
+          "cameraPermission": "Transit Driver needs camera access to capture KYC documents."
+        }
+      ],
       "./plugins/withRazorpayMaven",
       "./plugins/withIosPodfilePatches"
     ],

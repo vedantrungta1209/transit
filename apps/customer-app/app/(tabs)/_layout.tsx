@@ -76,7 +76,7 @@ export default function TabLayout() {
       <Tabs.Screen name="wallet" options={{ title: 'Wallet', tabBarIcon: ({ color }) => <IconWallet color={color} /> }} />
       <Tabs.Screen name="notifications" options={{ title: 'Alerts', tabBarIcon: ({ color }) => <IconBell color={color} /> }} />
       <Tabs.Screen name="offers" options={{ title: 'Offers', tabBarIcon: ({ color }) => <IconTag color={color} /> }} />
-      <Tabs.Screen name="profile" options={{ title: 'Account', tabBarIcon: ({ color }) => <IconUser color={color} /> }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
   );
 }

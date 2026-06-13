@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, Modal, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -193,8 +193,12 @@ export default function ProfileScreen() {
 
       {/* Edit modal */}
       <Modal visible={editField !== null} transparent animationType="slide" onRequestClose={() => setEditField(null)}>
-        <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setEditField(null)} />
-        <View style={s.modalSheet}>
+        <KeyboardAvoidingView
+          style={{ flex: 1, justifyContent: 'flex-end' }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => setEditField(null)} />
+          <View style={s.modalSheet}>
           <View style={s.sheetHandle} />
           <Text style={s.modalTitle}>{editTitle}</Text>
           <TextInput
@@ -213,6 +217,7 @@ export default function ProfileScreen() {
             {saving ? <ActivityIndicator color={T.ON_AMBER} /> : <Text style={s.saveBtnText}>Save</Text>}
           </TouchableOpacity>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { router } from 'expo-router';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useAuthStore } from '../../src/stores/auth';
 import { useBookingStore } from '../../src/stores/booking';
@@ -74,11 +75,18 @@ export default function HomeScreen() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [dropDisplayText, setDropDisplayText] = useState('');
+  const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [recentTrips, setRecentTrips] = useState<any[]>([]);
 
   const mapRef = useRef<MapView>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchInputRef = useRef<TextInput>(null);
   const dropInputRef = useRef<TextInput>(null);
+
+  // Compute initials the same way profile does — first letter of each word
+  const initials = user?.name
+    ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+    : user?.phone?.slice(-2) ?? 'ME';
 
   // ── Get GPS + reverse geocode pickup ──────────────────────────────────────
   useEffect(() => {
@@ -128,12 +136,24 @@ export default function HomeScreen() {
     };
   }, [token]);
 
+  // ── Load recent trips for quick-pick when sheet is expanded ─────────────────
+  function toggleSheet() {
+    const next = !sheetExpanded;
+    setSheetExpanded(next);
+    if (next && recentTrips.length === 0) {
+      api.get('/rides/history?limit=5').then(r => {
+        setRecentTrips(r.data.data?.rides?.slice(0, 4) || []);
+      }).catch(() => {});
+    }
+  }
+
   // ── Place search via server proxy (avoids client-side API key restrictions) ─
   const searchPlaces = useCallback((text: string) => {
     setSearchText(text);
     setPredictions([]);
+    setSearchLoading(false);
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    if (text.length < 2) { setSearchLoading(false); return; }
+    if (text.length < 2) { return; }
 
     searchTimeout.current = setTimeout(async () => {
       setSearchLoading(true);
@@ -270,7 +290,8 @@ export default function HomeScreen() {
     </View>
   );
 
-  const showPredictions = predictions.length > 0 || searchLoading;
+  // Only show predictions when there are actual results — not just loading
+  const showPredictions = predictions.length > 0;
   const showVehicles = step === 'selecting' && drop && searchMode === null;
 
   return (
@@ -328,8 +349,8 @@ export default function HomeScreen() {
             </TouchableOpacity>
           )}
           {searchMode !== 'pickup' && (
-            <TouchableOpacity style={s.avatar}>
-              <Text style={s.avatarText}>{user?.name ? user.name.slice(0, 2).toUpperCase() : 'ME'}</Text>
+            <TouchableOpacity style={s.avatar} onPress={() => router.push('/(tabs)/profile')}>
+              <Text style={s.avatarText}>{initials}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -369,7 +390,9 @@ export default function HomeScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={s.sheet}>
-          <View style={s.sheetHandle} />
+          <TouchableOpacity onPress={toggleSheet} style={s.sheetHandleArea} activeOpacity={0.7}>
+            <View style={s.sheetHandle} />
+          </TouchableOpacity>
 
           {/* Drop search input */}
           <View style={[s.searchBox, searchMode === 'drop' && { borderColor: T.AMBER, borderWidth: 1.5 }]}>
@@ -465,13 +488,47 @@ export default function HomeScreen() {
 
           {/* Default idle state */}
           {!showPredictions && !showVehicles && searchMode !== 'pickup' && (
-            <View style={s.promoBanner}>
-              <ShieldIcon />
-              <View>
-                <Text style={s.promoTitle}>Every fare, upfront</Text>
-                <Text style={s.promoSub}>The price you see is the price you pay.</Text>
+            <>
+              <View style={s.promoBanner}>
+                <ShieldIcon />
+                <View>
+                  <Text style={s.promoTitle}>Every fare, upfront</Text>
+                  <Text style={s.promoSub}>The price you see is the price you pay.</Text>
+                </View>
               </View>
-            </View>
+
+              {/* Recent trips quick-pick */}
+              {sheetExpanded && recentTrips.length > 0 && (
+                <View style={{ marginTop: 14 }}>
+                  <Text style={s.recentLabel}>Recent trips</Text>
+                  {recentTrips.map((trip: any) => (
+                    <TouchableOpacity
+                      key={trip.id}
+                      style={s.recentRow}
+                      onPress={() => {
+                        setDropDisplayText(trip.dropAddress);
+                        setDrop({ lat: trip.dropLat, lng: trip.dropLng, address: trip.dropAddress });
+                        setStep('selecting');
+                        if (pickup) {
+                          mapRef.current?.animateToRegion({
+                            latitude: (pickup.lat + trip.dropLat) / 2,
+                            longitude: (pickup.lng + trip.dropLng) / 2,
+                            latitudeDelta: Math.abs(pickup.lat - trip.dropLat) * 2.5 + 0.03,
+                            longitudeDelta: Math.abs(pickup.lng - trip.dropLng) * 2.5 + 0.03,
+                          }, 600);
+                        }
+                        setSheetExpanded(false);
+                      }}
+                    >
+                      <View style={s.recentIcon}>
+                        <LocationDotIcon />
+                      </View>
+                      <Text style={s.recentText} numberOfLines={1}>{trip.dropAddress}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </>
           )}
         </View>
       </KeyboardAvoidingView>
@@ -507,7 +564,12 @@ const s = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 14, paddingBottom: Platform.OS === 'ios' ? 30 : 20,
     ...T.SHADOW_SHEET,
   },
-  sheetHandle: { width: 40, height: 5, borderRadius: 99, backgroundColor: T.LINE, alignSelf: 'center', marginBottom: 16 },
+  sheetHandleArea: { alignSelf: 'stretch', alignItems: 'center', paddingBottom: 12, marginTop: -2 },
+  sheetHandle: { width: 40, height: 5, borderRadius: 99, backgroundColor: T.LINE },
+  recentLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 1, color: T.TEXT_FAINT, textTransform: 'uppercase', marginBottom: 8 },
+  recentRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderTopWidth: 1, borderTopColor: T.LINE },
+  recentIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: T.SURFACE_2, alignItems: 'center', justifyContent: 'center' },
+  recentText: { flex: 1, fontSize: 13.5, fontWeight: '500', color: T.TEXT },
   searchBox: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: T.SURFACE_2, borderRadius: T.R_MD,

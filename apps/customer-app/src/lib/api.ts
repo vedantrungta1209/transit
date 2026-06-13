@@ -5,6 +5,10 @@ export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://transit-api.t
 
 export const api = axios.create({ baseURL: `${API_URL}/api`, timeout: 15000 });
 
+// Registered by root layout — called when any request returns 401
+let _onUnauthorized: (() => void) | null = null;
+export function setUnauthorizedHandler(fn: () => void) { _onUnauthorized = fn; }
+
 api.interceptors.request.use(async (config) => {
   const token = await SecureStore.getItemAsync('accessToken');
   if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -16,6 +20,8 @@ api.interceptors.response.use(
   async (err) => {
     if (err.response?.status === 401) {
       await SecureStore.deleteItemAsync('accessToken');
+      await SecureStore.deleteItemAsync('user');
+      _onUnauthorized?.();
     }
     return Promise.reject(err);
   }

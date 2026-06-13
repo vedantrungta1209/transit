@@ -460,6 +460,9 @@ workflows:
       - name: Patch expo-modules-core Kotlin
         script: |
           python3 << 'PYEOF'
+          import re
+
+          # Patch 1: PermissionsService.kt null-safety
           path = 'node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/permissions/PermissionsService.kt'
           with open(path, 'r') as f:
               content = f.read()
@@ -473,6 +476,23 @@ workflows:
               print('✅ PermissionsService.kt null-safety patched')
           else:
               print('ℹ️ PermissionsService.kt already patched or pattern not found')
+
+          # Patch 2: Fix SoftwareComponent 'release' for AGP 8.x
+          gradle_path = 'node_modules/expo-modules-core/android/build.gradle'
+          with open(gradle_path, 'r') as f:
+              content = f.read()
+          patched = content.replace(
+              'from components.release',
+              'from(components.findByName("release") ?: return@afterEvaluate)'
+          )
+          if patched == content:
+              patched = re.sub(r'\bcomponents\.release\b', 'components.findByName("release")', content)
+          if patched != content:
+              with open(gradle_path, 'w') as f:
+                  f.write(patched)
+              print('✅ expo-modules-core build.gradle SoftwareComponent patched')
+          else:
+              print('ℹ️ expo-modules-core build.gradle already patched or pattern not found')
           PYEOF
 
       - name: Build AAB

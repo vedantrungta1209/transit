@@ -8,8 +8,12 @@ import { disconnectSocket } from '../../src/lib/socket';
 import { api } from '../../src/lib/api';
 import { T } from '../../src/lib/theme';
 
+type EditField = 'name' | 'email' | null;
+
 const MENU_ITEMS = [
   { icon: '📋', label: 'My Trips', route: '/(tabs)/rides' },
+  { icon: '🎁', label: 'Offers & Coupons', route: '/(tabs)/offers' },
+  { icon: '🔔', label: 'Notifications', route: '/(tabs)/notifications' },
   { icon: '💬', label: 'Help & Support', route: null },
   { icon: '🔒', label: 'Privacy Policy', route: null },
   { icon: '⭐', label: 'Rate the App', route: null },
@@ -17,8 +21,8 @@ const MENU_ITEMS = [
 
 export default function ProfileScreen() {
   const { user, logout, setUser } = useAuthStore();
-  const [editOpen, setEditOpen] = useState(false);
-  const [nameInput, setNameInput] = useState(user?.name || '');
+  const [editField, setEditField] = useState<EditField>(null);
+  const [input, setInput] = useState('');
   const [saving, setSaving] = useState(false);
 
   async function handleLogout() {
@@ -27,24 +31,57 @@ export default function ProfileScreen() {
     router.replace('/auth/phone');
   }
 
-  async function saveName() {
-    const trimmed = nameInput.trim();
-    if (!trimmed) { Alert.alert('Enter your name'); return; }
+  function openEdit(field: EditField) {
+    setInput(field === 'name' ? (user?.name || '') : (user?.email || ''));
+    setEditField(field);
+  }
+
+  async function saveField() {
+    const trimmed = input.trim();
+    if (!trimmed) { Alert.alert('Please enter a value'); return; }
     setSaving(true);
     try {
-      const { data } = await api.patch('/users/me', { name: trimmed });
+      const payload = editField === 'name' ? { name: trimmed } : { email: trimmed };
+      const { data } = await api.patch('/users/me', payload);
       setUser(data.data.user);
-      setEditOpen(false);
+      setEditField(null);
     } catch {
-      Alert.alert('Error', 'Could not update name. Please try again.');
+      Alert.alert('Error', 'Could not update. Please try again.');
     }
     setSaving(false);
+  }
+
+  function confirmDeleteAccount() {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all ride history. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.delete('/users/me');
+              await logout();
+              disconnectSocket();
+              router.replace('/auth/phone');
+            } catch {
+              Alert.alert('Error', 'Could not delete account. Contact support.');
+            }
+          },
+        },
+      ]
+    );
   }
 
   const displayName = user?.name || 'Transit Rider';
   const initials = user?.name
     ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
     : user?.phone?.slice(-2) ?? 'TR';
+
+  const editTitle = editField === 'name' ? 'Your name' : 'Your email';
+  const editPlaceholder = editField === 'name' ? 'e.g. Rahul Sharma' : 'e.g. rahul@gmail.com';
 
   return (
     <SafeAreaView style={s.container}>
@@ -54,7 +91,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Avatar + name */}
-        <TouchableOpacity style={s.avatarCard} onPress={() => { setNameInput(user?.name || ''); setEditOpen(true); }}>
+        <TouchableOpacity style={s.avatarCard} onPress={() => openEdit('name')}>
           <View style={s.avatar}>
             <Text style={s.avatarText}>{initials}</Text>
           </View>
@@ -70,6 +107,37 @@ export default function ProfileScreen() {
             <Text style={s.ratingText}>4.8</Text>
           </View>
         </TouchableOpacity>
+
+        {/* Quick edit fields */}
+        <View style={[s.menuCard, { marginBottom: 16 }]}>
+          <TouchableOpacity style={s.menuRow} onPress={() => openEdit('name')}>
+            <View style={s.menuIcon}><Text style={{ fontSize: 17 }}>✏️</Text></View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.menuLabel}>Name</Text>
+              <Text style={{ fontSize: 13, color: T.TEXT_MUTED }}>{user?.name || 'Not set'}</Text>
+            </View>
+            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+              <Path d="M9 5l7 7-7 7" stroke={T.TEXT_FAINT} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+            </Svg>
+          </TouchableOpacity>
+          <TouchableOpacity style={[s.menuRow, { borderTopWidth: 1, borderTopColor: T.LINE }]} onPress={() => openEdit('email')}>
+            <View style={s.menuIcon}><Text style={{ fontSize: 17 }}>📧</Text></View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.menuLabel}>Email</Text>
+              <Text style={{ fontSize: 13, color: T.TEXT_MUTED }}>{user?.email || 'Not set'}</Text>
+            </View>
+            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+              <Path d="M9 5l7 7-7 7" stroke={T.TEXT_FAINT} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+            </Svg>
+          </TouchableOpacity>
+          <View style={[s.menuRow, { borderTopWidth: 1, borderTopColor: T.LINE }]}>
+            <View style={s.menuIcon}><Text style={{ fontSize: 17 }}>📱</Text></View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.menuLabel}>Phone</Text>
+              <Text style={{ fontSize: 13, color: T.TEXT_MUTED }}>{user?.phone}</Text>
+            </View>
+          </View>
+        </View>
 
         {/* Menu */}
         <View style={[s.menuCard, { marginBottom: 16 }]}>
@@ -90,32 +158,37 @@ export default function ProfileScreen() {
           ))}
         </View>
 
-        {/* Logout */}
+        {/* Logout + delete */}
         <View style={{ paddingHorizontal: 20 }}>
           <TouchableOpacity onPress={handleLogout} style={s.logoutBtn}>
             <Text style={s.logoutText}>Sign out</Text>
           </TouchableOpacity>
-          <Text style={s.versionText}>Transit v1.0 · All fares are upfront</Text>
+          <TouchableOpacity onPress={confirmDeleteAccount} style={s.deleteBtn}>
+            <Text style={s.deleteText}>Delete Account</Text>
+          </TouchableOpacity>
+          <Text style={s.versionText}>Transit v1.0 · All fares are upfront{'\n'}by Shankh Technologies</Text>
         </View>
       </ScrollView>
 
-      {/* Edit name modal */}
-      <Modal visible={editOpen} transparent animationType="slide" onRequestClose={() => setEditOpen(false)}>
-        <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setEditOpen(false)} />
+      {/* Edit modal */}
+      <Modal visible={editField !== null} transparent animationType="slide" onRequestClose={() => setEditField(null)}>
+        <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setEditField(null)} />
         <View style={s.modalSheet}>
           <View style={s.sheetHandle} />
-          <Text style={s.modalTitle}>Your name</Text>
+          <Text style={s.modalTitle}>{editTitle}</Text>
           <TextInput
-            value={nameInput}
-            onChangeText={setNameInput}
-            placeholder="e.g. Rahul Sharma"
+            value={input}
+            onChangeText={setInput}
+            placeholder={editPlaceholder}
             placeholderTextColor={T.TEXT_FAINT}
             style={s.nameInput}
             autoFocus
             returnKeyType="done"
-            onSubmitEditing={saveName}
+            keyboardType={editField === 'email' ? 'email-address' : 'default'}
+            autoCapitalize={editField === 'email' ? 'none' : 'words'}
+            onSubmitEditing={saveField}
           />
-          <TouchableOpacity onPress={saveName} style={s.saveBtn} disabled={saving}>
+          <TouchableOpacity onPress={saveField} style={s.saveBtn} disabled={saving}>
             {saving ? <ActivityIndicator color={T.ON_AMBER} /> : <Text style={s.saveBtnText}>Save</Text>}
           </TouchableOpacity>
         </View>
@@ -153,9 +226,11 @@ const s = StyleSheet.create({
   menuRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 18, paddingVertical: 16 },
   menuIcon: { width: 38, height: 38, borderRadius: 11, backgroundColor: T.SURFACE_2, alignItems: 'center', justifyContent: 'center' },
   menuLabel: { flex: 1, fontSize: 15, fontWeight: '500', color: T.TEXT },
-  logoutBtn: { height: 52, borderRadius: T.R_MD, borderWidth: 1.5, borderColor: '#DC4E37', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  logoutBtn: { height: 52, borderRadius: T.R_MD, borderWidth: 1.5, borderColor: '#DC4E37', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   logoutText: { fontSize: 15, fontWeight: '600', color: T.DANGER },
-  versionText: { textAlign: 'center', fontSize: 12, color: T.TEXT_FAINT },
+  deleteBtn: { height: 44, borderRadius: T.R_MD, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  deleteText: { fontSize: 13, fontWeight: '500', color: T.TEXT_FAINT, textDecorationLine: 'underline' },
+  versionText: { textAlign: 'center', fontSize: 12, color: T.TEXT_FAINT, lineHeight: 18 },
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
   modalSheet: {

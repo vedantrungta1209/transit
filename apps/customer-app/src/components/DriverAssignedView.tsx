@@ -19,8 +19,8 @@ export default function DriverAssignedView({ driver, ride, driverLocation, onCan
       <MapView
         style={{ flex: 1 }}
         initialRegion={{
-          latitude: driverLocation?.lat || 26.84,
-          longitude: driverLocation?.lng || 80.94,
+          latitude: driverLocation?.lat || 12.9716,
+          longitude: driverLocation?.lng || 77.5946,
           latitudeDelta: 0.03,
           longitudeDelta: 0.03,
         }}

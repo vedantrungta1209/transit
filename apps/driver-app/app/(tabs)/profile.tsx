@@ -118,7 +118,7 @@ export default function ProfileScreen() {
           <TouchableOpacity onPress={handleLogout} style={s.logoutBtn}>
             <Text style={s.logoutText}>Sign out</Text>
           </TouchableOpacity>
-          <Text style={s.versionText}>Transit Driver v1.0 · Zero commission</Text>
+          <Text style={s.versionText}>Transit Driver v1.0 · Zero commission{'\n'}by Shankh Technologies</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -186,5 +186,5 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
   logoutText: { fontSize: 15, fontWeight: '600', color: T.DANGER },
-  versionText: { textAlign: 'center', fontSize: 12, color: T.TEXT_FAINT },
+  versionText: { textAlign: 'center', fontSize: 12, color: T.TEXT_FAINT, lineHeight: 18 },
 });

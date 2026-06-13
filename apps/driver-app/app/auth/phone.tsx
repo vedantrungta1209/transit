@@ -6,21 +6,30 @@ import Svg, { Path, Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { api } from '../../src/lib/api';
 import { T } from '../../src/lib/theme';
 
-function TransitWordmark() {
+function TransitDriverWordmark() {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-      <Svg width={40} height={40} viewBox="0 0 120 120">
-        <Defs>
-          <LinearGradient id="wmbg" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#16356A" />
-            <Stop offset="1" stopColor="#0A1C40" />
-          </LinearGradient>
-        </Defs>
-        <Rect x="6" y="6" width="108" height="108" rx="28" fill="url(#wmbg)" />
-        <Rect x="32" y="33" width="56" height="13.5" rx="6.75" fill="#F7B32B" />
-        <Path d="M53 44 L67 44 L67 70 L78 86 L70 90 L60 80 L50 90 L42 86 L53 70 Z" fill="#F7B32B" />
-      </Svg>
-      <Text style={{ fontSize: 26, fontWeight: '700', color: '#fff', letterSpacing: -0.5 }}>Transit</Text>
+    <View style={{ marginBottom: 6 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+        <Svg width={40} height={40} viewBox="0 0 120 120">
+          <Defs>
+            <LinearGradient id="dmbg" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor="#F7B32B" />
+              <Stop offset="1" stopColor="#E8941A" />
+            </LinearGradient>
+          </Defs>
+          <Rect x="6" y="6" width="108" height="108" rx="28" fill="url(#dmbg)" />
+          <Rect x="32" y="33" width="56" height="13.5" rx="6.75" fill="#0F2B5B" />
+          <Path d="M53 44 L67 44 L67 70 L78 86 L70 90 L60 80 L50 90 L42 86 L53 70 Z" fill="#0F2B5B" />
+        </Svg>
+        <View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={{ fontSize: 26, fontWeight: '700', color: '#fff', letterSpacing: -0.5 }}>Transit</Text>
+            <View style={{ width: 1, height: 20, backgroundColor: 'rgba(255,255,255,0.3)' }} />
+            <Text style={{ fontSize: 12, fontWeight: '800', color: T.AMBER, letterSpacing: 2 }}>DRIVER</Text>
+          </View>
+          <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', letterSpacing: 0.3 }}>by Shankh Technologies</Text>
+        </View>
+      </View>
     </View>
   );
 }
@@ -46,8 +55,7 @@ export default function PhoneScreen() {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
       <SafeAreaView style={s.container}>
         <View style={s.inner}>
-          <TransitWordmark />
-          <Text style={s.badge}>Driver App</Text>
+          <TransitDriverWordmark />
           <Text style={s.tagline}>Drive. Earn. Keep everything.</Text>
 
           <View style={s.card}>
@@ -86,13 +94,6 @@ export default function PhoneScreen() {
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: T.NAVY },
   inner: { flex: 1, paddingHorizontal: 24, justifyContent: 'center' },
-  badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: T.AMBER_SOFT, borderWidth: 1, borderColor: T.AMBER_LINE,
-    borderRadius: T.R_PILL, paddingHorizontal: 10, paddingVertical: 4,
-    fontSize: 11, fontWeight: '700', color: T.AMBER, letterSpacing: 0.5,
-    marginBottom: 6,
-  },
   tagline: { fontSize: 16, color: T.ON_NAVY_MUT, marginBottom: 36, letterSpacing: 0.1 },
   card: {
     backgroundColor: T.SURFACE, borderRadius: T.R_XL,

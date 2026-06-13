@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { authenticateUser } from '../middleware/auth';
-import { getProfile, updateProfile, getSavedAddresses, saveAddress, deleteAddress, getWallet, topUpWallet, rateDriver } from '../controllers/user.controller';
+import { getProfile, updateProfile, deleteAccount, getSavedAddresses, saveAddress, deleteAddress, getWallet, topUpWallet, rateDriver, getNotifications } from '../controllers/user.controller';
 const r = Router();
 r.get('/me', authenticateUser, getProfile);
 r.patch('/me', authenticateUser, updateProfile);
+r.delete('/me', authenticateUser, deleteAccount);
+r.get('/me/notifications', authenticateUser, getNotifications);
 r.get('/me/addresses', authenticateUser, getSavedAddresses);
 r.post('/me/addresses', authenticateUser, saveAddress);
 r.delete('/me/addresses/:id', authenticateUser, deleteAddress);

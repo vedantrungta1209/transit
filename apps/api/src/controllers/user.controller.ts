@@ -9,7 +9,7 @@ export async function getProfile(req: Request, res: Response) {
 export async function updateProfile(req: Request, res: Response) {
   const { name, email, fcmToken } = req.body;
   const user = await prisma.user.update({ where: { id: req.user.id }, data: { name, email, fcmToken } });
-  success(res, user);
+  success(res, { user });
 }
 
 export async function getSavedAddresses(req: Request, res: Response) {
@@ -41,6 +41,20 @@ export async function topUpWallet(req: Request, res: Response) {
   const { createOrder } = await import('../services/razorpay.service');
   const order = await createOrder(amount, `wallet_${req.user.id}`);
   success(res, { razorpayOrderId: order.id, amount });
+}
+
+export async function deleteAccount(req: Request, res: Response) {
+  await prisma.user.delete({ where: { id: req.user.id } });
+  success(res, { deleted: true });
+}
+
+export async function getNotifications(req: Request, res: Response) {
+  const notifs = await prisma.notification.findMany({
+    where: { userId: req.user.id },
+    orderBy: { sentAt: 'desc' },
+    take: 50,
+  });
+  success(res, notifs.map(n => ({ ...n, read: n.isRead, createdAt: n.sentAt })));
 }
 
 export async function rateDriver(req: Request, res: Response) {

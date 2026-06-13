@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 interface AuthState {
   driver: any | null;
   token: string | null;
+  isHydrated: boolean;
   setAuth: (token: string, driver: any) => Promise<void>;
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
@@ -12,6 +13,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   driver: null,
   token: null,
+  isHydrated: false,
   setAuth: async (token, driver) => {
     await SecureStore.setItemAsync('accessToken', token);
     await SecureStore.setItemAsync('driver', JSON.stringify(driver));
@@ -26,5 +28,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     const token = await SecureStore.getItemAsync('accessToken');
     const driverStr = await SecureStore.getItemAsync('driver');
     if (token && driverStr) set({ token, driver: JSON.parse(driverStr) });
+    set({ isHydrated: true });
   },
 }));

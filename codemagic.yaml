@@ -47,32 +47,31 @@ workflows:
           EOF
 
           python3 << 'PYEOF'
-          with open('apps/customer-app/android/app/build.gradle', 'r') as f:
+          import re, sys
+          GRADLE = 'apps/customer-app/android/app/build.gradle'
+          with open(GRADLE, 'r') as f:
               content = f.read()
+          if 'signingConfigs.release' in content:
+              print('✅ Release signing already configured'); sys.exit(0)
           loader = (
               '\ndef keystorePropertiesFile = rootProject.file("key.properties")\n'
               'def keystoreProperties = new Properties()\n'
               'keystoreProperties.load(new FileInputStream(keystorePropertiesFile))\n\n'
           )
-          content = content.replace(
-              '    signingConfigs {\n        debug {',
-              loader + '    signingConfigs {\n'
+          release_block = (
               '        release {\n'
               "            storeFile file(keystoreProperties['storeFile'])\n"
               "            storePassword keystoreProperties['storePassword']\n"
               "            keyAlias keystoreProperties['keyAlias']\n"
               "            keyPassword keystoreProperties['keyPassword']\n"
-              '        }\n        debug {',
-              1
+              '        }\n'
           )
-          content = content.replace(
-              '            // Caution! In production, you need to generate your own keystore file.\n'
-              '            // see https://reactnative.dev/docs/signed-apk-android.\n'
-              '            signingConfig signingConfigs.debug',
-              '            signingConfig signingConfigs.release',
-              1
-          )
-          with open('apps/customer-app/android/app/build.gradle', 'w') as f:
+          content = re.sub(r'(?m)^(android\s*\{)', lambda m: loader + m.group(0), content, count=1)
+          content = re.sub(r'(\bsigningConfigs\s*\{[^\n]*\n)', lambda m: m.group(0) + release_block, content, count=1)
+          content = re.sub(r'signingConfig\s+signingConfigs\.debug', 'signingConfig signingConfigs.release', content, count=1)
+          if 'signingConfigs.release' not in content:
+              print('❌ Signing patch failed. Dumping build.gradle:'); print(content[:3000]); sys.exit(1)
+          with open(GRADLE, 'w') as f:
               f.write(content)
           print('✅ Release signing config patched')
           PYEOF
@@ -157,32 +156,31 @@ workflows:
           EOF
 
           python3 << 'PYEOF'
-          with open('apps/driver-app/android/app/build.gradle', 'r') as f:
+          import re, sys
+          GRADLE = 'apps/driver-app/android/app/build.gradle'
+          with open(GRADLE, 'r') as f:
               content = f.read()
+          if 'signingConfigs.release' in content:
+              print('✅ Release signing already configured'); sys.exit(0)
           loader = (
               '\ndef keystorePropertiesFile = rootProject.file("key.properties")\n'
               'def keystoreProperties = new Properties()\n'
               'keystoreProperties.load(new FileInputStream(keystorePropertiesFile))\n\n'
           )
-          content = content.replace(
-              '    signingConfigs {\n        debug {',
-              loader + '    signingConfigs {\n'
+          release_block = (
               '        release {\n'
               "            storeFile file(keystoreProperties['storeFile'])\n"
               "            storePassword keystoreProperties['storePassword']\n"
               "            keyAlias keystoreProperties['keyAlias']\n"
               "            keyPassword keystoreProperties['keyPassword']\n"
-              '        }\n        debug {',
-              1
+              '        }\n'
           )
-          content = content.replace(
-              '            // Caution! In production, you need to generate your own keystore file.\n'
-              '            // see https://reactnative.dev/docs/signed-apk-android.\n'
-              '            signingConfig signingConfigs.debug',
-              '            signingConfig signingConfigs.release',
-              1
-          )
-          with open('apps/driver-app/android/app/build.gradle', 'w') as f:
+          content = re.sub(r'(?m)^(android\s*\{)', lambda m: loader + m.group(0), content, count=1)
+          content = re.sub(r'(\bsigningConfigs\s*\{[^\n]*\n)', lambda m: m.group(0) + release_block, content, count=1)
+          content = re.sub(r'signingConfig\s+signingConfigs\.debug', 'signingConfig signingConfigs.release', content, count=1)
+          if 'signingConfigs.release' not in content:
+              print('❌ Signing patch failed. Dumping build.gradle:'); print(content[:3000]); sys.exit(1)
+          with open(GRADLE, 'w') as f:
               f.write(content)
           print('✅ Release signing config patched')
           PYEOF
@@ -423,32 +421,31 @@ workflows:
           EOF
 
           python3 << 'PYEOF'
-          with open('apps/driver-app/android/app/build.gradle', 'r') as f:
+          import re, sys
+          GRADLE = 'apps/driver-app/android/app/build.gradle'
+          with open(GRADLE, 'r') as f:
               content = f.read()
+          if 'signingConfigs.release' in content:
+              print('✅ Release signing already configured'); sys.exit(0)
           loader = (
               '\ndef keystorePropertiesFile = rootProject.file("key.properties")\n'
               'def keystoreProperties = new Properties()\n'
               'keystoreProperties.load(new FileInputStream(keystorePropertiesFile))\n\n'
           )
-          content = content.replace(
-              '    signingConfigs {\n        debug {',
-              loader + '    signingConfigs {\n'
+          release_block = (
               '        release {\n'
               "            storeFile file(keystoreProperties['storeFile'])\n"
               "            storePassword keystoreProperties['storePassword']\n"
               "            keyAlias keystoreProperties['keyAlias']\n"
               "            keyPassword keystoreProperties['keyPassword']\n"
-              '        }\n        debug {',
-              1
+              '        }\n'
           )
-          content = content.replace(
-              '            // Caution! In production, you need to generate your own keystore file.\n'
-              '            // see https://reactnative.dev/docs/signed-apk-android.\n'
-              '            signingConfig signingConfigs.debug',
-              '            signingConfig signingConfigs.release',
-              1
-          )
-          with open('apps/driver-app/android/app/build.gradle', 'w') as f:
+          content = re.sub(r'(?m)^(android\s*\{)', lambda m: loader + m.group(0), content, count=1)
+          content = re.sub(r'(\bsigningConfigs\s*\{[^\n]*\n)', lambda m: m.group(0) + release_block, content, count=1)
+          content = re.sub(r'signingConfig\s+signingConfigs\.debug', 'signingConfig signingConfigs.release', content, count=1)
+          if 'signingConfigs.release' not in content:
+              print('❌ Signing patch failed. Dumping build.gradle:'); print(content[:3000]); sys.exit(1)
+          with open(GRADLE, 'w') as f:
               f.write(content)
           print('✅ Release signing config patched')
           PYEOF
@@ -774,6 +771,87 @@ workflows:
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
+
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Transit Customer — OTA Update (EAS Update, JS-only changes)
+  # Trigger: tag customer-ota-v*  OR  manual
+  # For pure JS/UI fixes — no native rebuild, ships in ~5 min
+  # ─────────────────────────────────────────────────────────────────────────────
+  transit-customer-ota:
+    name: Transit Customer — OTA Update
+    max_build_duration: 20
+    instance_type: mac_mini_m2
+
+    environment:
+      groups:
+        - transit_android
+      vars:
+        EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
+        EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
+        EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
+      node: 20.19.4
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'customer-ota-v*'
+          include: true
+
+    scripts:
+      - name: Install dependencies
+        script: npm install --legacy-peer-deps
+
+      - name: Publish OTA update
+        script: |
+          npm install -g eas-cli@latest
+          cd apps/customer-app
+          eas update --branch production --message "$FCI_TAG" --non-interactive
+        env:
+          EXPO_TOKEN: $EXPO_TOKEN
+
+    artifacts: []
+
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Transit Driver — OTA Update (EAS Update, JS-only changes)
+  # Trigger: tag driver-ota-v*  OR  manual
+  # ─────────────────────────────────────────────────────────────────────────────
+  transit-driver-ota:
+    name: Transit Driver — OTA Update
+    max_build_duration: 20
+    instance_type: mac_mini_m2
+
+    environment:
+      groups:
+        - transit_android
+      vars:
+        EXPO_PUBLIC_API_URL: "https://transit-api.transitco.in"
+        EXPO_PUBLIC_RAZORPAY_KEY: "rzp_live_Sygzq2mkLj0s0k"
+        EXPO_PUBLIC_GOOGLE_MAPS_KEY: "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
+      node: 20.19.4
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'driver-ota-v*'
+          include: true
+
+    scripts:
+      - name: Install dependencies
+        script: npm install --legacy-peer-deps
+
+      - name: Publish OTA update
+        script: |
+          npm install -g eas-cli@latest
+          cd apps/driver-app
+          eas update --branch production --message "$FCI_TAG" --non-interactive
+        env:
+          EXPO_TOKEN: $EXPO_TOKEN
+
+    artifacts: []
 
 
   # ─────────────────────────────────────────────────────────────────────────────

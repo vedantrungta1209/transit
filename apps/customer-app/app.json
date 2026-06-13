@@ -53,6 +53,15 @@
     ],
     "scheme": "transit",
     "newArchEnabled": false,
+    "updates": {
+      "url": "https://u.expo.dev/1629b745-bb59-454b-9136-811d8849ce47",
+      "enabled": true,
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
     "extra": {
       "router": {
         "origin": false

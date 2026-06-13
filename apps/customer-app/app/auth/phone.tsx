@@ -26,21 +26,34 @@ function TransitWordmark() {
 }
 
 export default function PhoneScreen() {
+  const [mode, setMode] = useState<'phone' | 'email'>('phone');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleSendOtp() {
-    if (phone.length < 10) return Alert.alert('Enter a valid 10-digit number');
-    setLoading(true);
-    try {
-      await api.post('/auth/user/send-otp', { phone });
-      router.push({ pathname: '/auth/otp', params: { phone } });
-    } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.error || 'Failed to send OTP');
-    } finally { setLoading(false); }
+    if (mode === 'phone') {
+      if (phone.length < 10) return Alert.alert('Enter a valid 10-digit number');
+      setLoading(true);
+      try {
+        await api.post('/auth/user/send-otp', { phone });
+        router.push({ pathname: '/auth/otp', params: { phone, mode: 'phone' } });
+      } catch (e: any) {
+        Alert.alert('Error', e.response?.data?.error || 'Failed to send OTP');
+      } finally { setLoading(false); }
+    } else {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return Alert.alert('Enter a valid email address');
+      setLoading(true);
+      try {
+        await api.post('/auth/user/email/send-otp', { email });
+        router.push({ pathname: '/auth/otp', params: { email, mode: 'email' } });
+      } catch (e: any) {
+        Alert.alert('Error', e.response?.data?.error || 'Failed to send OTP');
+      } finally { setLoading(false); }
+    }
   }
 
-  const ready = phone.length === 10;
+  const ready = mode === 'phone' ? phone.length === 10 : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
@@ -50,22 +63,58 @@ export default function PhoneScreen() {
           <Text style={s.tagline}>Ride. Upfront fares. No surprises.</Text>
 
           <View style={s.card}>
-            <Text style={s.cardTitle}>Your mobile number</Text>
-            <View style={s.inputRow}>
-              <View style={s.dialCode}>
-                <Text style={s.dialCodeText}>+91</Text>
-              </View>
-              <TextInput
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="10-digit number"
-                placeholderTextColor={T.TEXT_FAINT}
-                keyboardType="phone-pad"
-                maxLength={10}
-                style={s.input}
-                autoFocus
-              />
+            {/* Mode toggle */}
+            <View style={s.toggle}>
+              <TouchableOpacity
+                onPress={() => setMode('phone')}
+                style={[s.toggleBtn, mode === 'phone' && s.toggleBtnActive]}
+              >
+                <Text style={[s.toggleBtnText, mode === 'phone' && s.toggleBtnTextActive]}>Phone</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setMode('email')}
+                style={[s.toggleBtn, mode === 'email' && s.toggleBtnActive]}
+              >
+                <Text style={[s.toggleBtnText, mode === 'email' && s.toggleBtnTextActive]}>Email</Text>
+              </TouchableOpacity>
             </View>
+
+            {mode === 'phone' ? (
+              <>
+                <Text style={s.cardTitle}>Your mobile number</Text>
+                <View style={s.inputRow}>
+                  <View style={s.dialCode}>
+                    <Text style={s.dialCodeText}>+91</Text>
+                  </View>
+                  <TextInput
+                    value={phone}
+                    onChangeText={setPhone}
+                    placeholder="10-digit number"
+                    placeholderTextColor={T.TEXT_FAINT}
+                    keyboardType="phone-pad"
+                    maxLength={10}
+                    style={s.input}
+                    autoFocus
+                  />
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={s.cardTitle}>Your email address</Text>
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="you@example.com"
+                  placeholderTextColor={T.TEXT_FAINT}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  style={[s.input, s.emailInput]}
+                  autoFocus
+                />
+              </>
+            )}
+
             <TouchableOpacity
               onPress={handleSendOtp}
               disabled={loading || !ready}
@@ -90,6 +139,14 @@ const s = StyleSheet.create({
     backgroundColor: T.SURFACE, borderRadius: T.R_XL,
     padding: 24, ...T.SHADOW_LG,
   },
+  toggle: {
+    flexDirection: 'row', backgroundColor: T.SURFACE_2,
+    borderRadius: T.R_MD, padding: 3, marginBottom: 20,
+  },
+  toggleBtn: { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: T.R_MD - 2 },
+  toggleBtnActive: { backgroundColor: T.SURFACE, ...T.SHADOW_SM },
+  toggleBtnText: { fontSize: 14, fontWeight: '600', color: T.TEXT_FAINT },
+  toggleBtnTextActive: { color: T.NAVY },
   cardTitle: { fontSize: 13, fontWeight: '600', letterSpacing: 1, color: T.TEXT_FAINT, textTransform: 'uppercase', marginBottom: 12 },
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
@@ -104,6 +161,11 @@ const s = StyleSheet.create({
   input: {
     flex: 1, paddingHorizontal: 16, paddingVertical: 16,
     fontSize: 20, fontWeight: '600', color: T.TEXT, letterSpacing: 2,
+  },
+  emailInput: {
+    borderWidth: 1.5, borderColor: T.LINE, borderRadius: T.R_MD,
+    backgroundColor: T.SURFACE_2, marginBottom: 16, letterSpacing: 0,
+    fontSize: 16,
   },
   ctaBtn: {
     height: 56, backgroundColor: T.AMBER, borderRadius: T.R_MD,

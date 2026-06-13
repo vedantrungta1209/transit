@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma';
 import { setOtp, getOtp, deleteOtp, setRefreshToken, getRefreshToken, deleteRefreshToken } from '../utils/redis';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import { sendOtp } from '../services/sms.service';
+import { sendEmailOtp } from '../services/email.service';
 import { success, error } from '../utils/response';
 import { generateOtp, normalizePhone, isValidIndianPhone } from '@transit/shared';
 
@@ -107,4 +108,34 @@ export async function logout(req: Request, res: Response) {
   const { refreshToken: token } = req.body;
   if (token) await deleteRefreshToken(token);
   success(res, { message: 'Logged out' });
+}
+
+export async function sendUserEmailOtp(req: Request, res: Response) {
+  const { email } = req.body;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return error(res, 'Invalid email address', 400);
+  const otp = generateOtp(6);
+  await setOtp(`email:${email.toLowerCase()}`, otp, 600); // 10 min TTL
+  await sendEmailOtp(email, otp);
+  success(res, { message: 'OTP sent to email' });
+}
+
+export async function verifyUserEmailOtp(req: Request, res: Response) {
+  const { email, otp } = req.body;
+  if (!email || !otp) return error(res, 'Email and OTP required', 400);
+  const key = `email:${email.toLowerCase()}`;
+  const stored = await getOtp(key);
+  if (!stored || stored !== otp) return error(res, 'Invalid or expired OTP', 400);
+  await deleteOtp(key);
+
+  let user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+  const isNew = !user;
+  if (!user) {
+    user = await prisma.user.create({ data: { email: email.toLowerCase(), phone: `email_${Date.now()}` } });
+  }
+
+  const accessToken = signAccessToken({ id: user.id, type: 'user' });
+  const refreshToken = signRefreshToken({ id: user.id, type: 'user' });
+  await setRefreshToken(refreshToken, user.id, 30 * 86400);
+
+  success(res, { accessToken, refreshToken, user, isNew });
 }

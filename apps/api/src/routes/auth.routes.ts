@@ -1,8 +1,10 @@
 import { Router } from 'express';
-import { sendUserOtp, verifyUserOtp, sendDriverOtp, verifyDriverOtp, adminLogin, refreshToken, logout } from '../controllers/auth.controller';
+import { sendUserOtp, verifyUserOtp, sendDriverOtp, verifyDriverOtp, adminLogin, refreshToken, logout, sendUserEmailOtp, verifyUserEmailOtp } from '../controllers/auth.controller';
 const r = Router();
 r.post('/user/send-otp', sendUserOtp);
 r.post('/user/verify-otp', verifyUserOtp);
+r.post('/user/email/send-otp', sendUserEmailOtp);
+r.post('/user/email/verify-otp', verifyUserEmailOtp);
 r.post('/driver/send-otp', sendDriverOtp);
 r.post('/driver/verify-otp', verifyDriverOtp);
 r.post('/admin/login', adminLogin);

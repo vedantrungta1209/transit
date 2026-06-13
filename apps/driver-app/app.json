@@ -63,6 +63,15 @@
     ],
     "scheme": "transit-driver",
     "newArchEnabled": false,
+    "updates": {
+      "url": "https://u.expo.dev/274a2c6f-50ca-42bf-b398-1c6f88ffd878",
+      "enabled": true,
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
     "extra": {
       "router": {
         "origin": false

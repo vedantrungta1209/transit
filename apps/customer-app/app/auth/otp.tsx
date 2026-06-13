@@ -8,7 +8,8 @@ import { useAuthStore } from '../../src/stores/auth';
 import { T } from '../../src/lib/theme';
 
 export default function OtpScreen() {
-  const { phone } = useLocalSearchParams<{ phone: string }>();
+  const { phone, email, mode } = useLocalSearchParams<{ phone: string; email: string; mode: string }>();
+  const isEmail = mode === 'email';
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const refs = useRef<(TextInput | null)[]>([null, null, null, null, null, null]);
@@ -19,7 +20,9 @@ export default function OtpScreen() {
     if (code.length < 6) return;
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/user/verify-otp', { phone, otp: code });
+      const endpoint = isEmail ? '/auth/user/email/verify-otp' : '/auth/user/verify-otp';
+      const payload = isEmail ? { email, otp: code } : { phone, otp: code };
+      const { data } = await api.post(endpoint, payload);
       await setAuth(data.data.accessToken, data.data.user);
       router.replace('/(tabs)/home');
     } catch (e: any) {
@@ -65,7 +68,9 @@ export default function OtpScreen() {
         </TouchableOpacity>
 
         <Text style={s.title}>Enter OTP</Text>
-        <Text style={s.subtitle}>6-digit code sent to +91 {phone}</Text>
+        <Text style={s.subtitle}>
+          6-digit code sent to {isEmail ? email : `+91 ${phone}`}
+        </Text>
 
         <View style={s.otpRow}>
           {otp.map((digit, i) => (

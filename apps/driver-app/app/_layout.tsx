@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Stack, router } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Updates from 'expo-updates';
 import { useAuthStore } from '../src/stores/auth';
 import { setUnauthorizedHandler } from '../src/lib/api';
 import { initI18n } from '../src/i18n';
@@ -17,6 +18,14 @@ export default function RootLayout() {
       await logout();
       router.replace('/auth/phone');
     });
+    if (!__DEV__) {
+      Updates.checkForUpdateAsync().then(async ({ isAvailable }) => {
+        if (isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      }).catch(() => {});
+    }
   }, []);
 
   return (

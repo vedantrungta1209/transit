@@ -460,6 +460,7 @@ workflows:
           cd apps/driver-app/android
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
           sed -i '' "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
+          sed -i '' "s/targetSdkVersion .*/targetSdkVersion 35/" app/build.gradle
 
       - name: Patch expo-modules-core Kotlin
         script: |

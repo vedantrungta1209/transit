@@ -1,39 +1,88 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import Svg, { Path } from 'react-native-svg';
 import { api } from '../../src/lib/api';
 import { T } from '../../src/lib/theme';
-import RazorpayCheckout from 'react-native-razorpay';
+
+let RazorpayCheckout: any = null;
+try { RazorpayCheckout = require('react-native-razorpay').default; } catch { /* not available in this build */ }
 
 const TOPUP_AMOUNTS = [100, 200, 500, 1000];
 
 export default function WalletScreen() {
-  const { data, refetch } = useQuery({
+  const [processingAmt, setProcessingAmt] = useState<number | null>(null);
+
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['wallet'],
     queryFn: () => api.get('/users/me/wallet').then(r => r.data.data),
+    retry: 2,
   });
 
-  const topupMutation = useMutation({
-    mutationFn: async (amt: number) => {
+  async function handleTopup(amt: number) {
+    if (processingAmt) return;
+    setProcessingAmt(amt);
+    try {
       const { data: order } = await api.post('/users/me/wallet/topup', { amount: amt });
+      if (!RazorpayCheckout) {
+        Alert.alert('Payment unavailable', 'Payment is not configured for this build. Please update the app.');
+        return;
+      }
+      const rzpKey = process.env.EXPO_PUBLIC_RAZORPAY_KEY || '';
+      if (!rzpKey) {
+        Alert.alert('Configuration error', 'Payment key not set. Please contact support.');
+        return;
+      }
       await RazorpayCheckout.open({
-        key: process.env.EXPO_PUBLIC_RAZORPAY_KEY || '',
+        key: rzpKey,
         order_id: order.data.razorpayOrderId,
         amount: amt * 100,
         currency: 'INR',
-        name: 'Transit Wallet',
+        name: 'Transit',
         description: 'Wallet Top-Up',
         prefill: { contact: '' },
+        theme: { color: T.AMBER },
       });
-    },
-    onSuccess: (_, amt) => { Alert.alert('Added!', `₹${amt} added to your wallet.`); refetch(); },
-    onError: () => {},
-  });
+      Alert.alert('Added!', `₹${amt} added to your wallet.`);
+      refetch();
+    } catch (e: any) {
+      if (e?.code === 'PAYMENT_CANCELLED' || e?.description === 'Payment cancelled by user') {
+        // User dismissed — no alert needed
+      } else {
+        Alert.alert('Payment failed', e?.description || e?.message || 'Could not process payment. Please try again.');
+      }
+    } finally {
+      setProcessingAmt(null);
+    }
+  }
 
   const balance = Number(data?.balance || 0);
   const transactions: any[] = data?.transactions || [];
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={s.container}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={T.NAVY} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={s.container}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 }}>
+          <Text style={{ fontSize: 17, fontWeight: '600', color: T.TEXT, marginBottom: 8 }}>Could not load wallet</Text>
+          <Text style={{ fontSize: 14, color: T.TEXT_MUTED, textAlign: 'center', marginBottom: 20 }}>Check your connection and try again.</Text>
+          <TouchableOpacity onPress={() => refetch()} style={s.retryBtn}>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: T.AMBER_DEEP }}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={s.container}>
@@ -62,11 +111,14 @@ export default function WalletScreen() {
             {TOPUP_AMOUNTS.map(amt => (
               <TouchableOpacity
                 key={amt}
-                onPress={() => topupMutation.mutate(amt)}
-                disabled={topupMutation.isPending}
-                style={s.topupBtn}
+                onPress={() => handleTopup(amt)}
+                disabled={processingAmt !== null}
+                style={[s.topupBtn, processingAmt === amt && { backgroundColor: T.AMBER_SOFT, borderColor: T.AMBER_LINE }]}
               >
-                <Text style={s.topupText}>₹{amt}</Text>
+                {processingAmt === amt
+                  ? <ActivityIndicator size="small" color={T.AMBER_DEEP} />
+                  : <Text style={s.topupText}>₹{amt}</Text>
+                }
               </TouchableOpacity>
             ))}
           </View>
@@ -93,7 +145,7 @@ export default function WalletScreen() {
                     <Text style={s.txnDate}>{new Date(txn.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
                   </View>
                   <Text style={[s.txnAmount, { color: isCredit ? T.SUCCESS : T.DANGER }]}>
-                    {isCredit ? '+' : '-'}₹{txn.amount}
+                    {isCredit ? '+' : '-'}₹{Number(txn.amount).toLocaleString('en-IN')}
                   </Text>
                 </View>
               );
@@ -139,4 +191,9 @@ const s = StyleSheet.create({
   txnLabel: { fontSize: 14.5, fontWeight: '500', color: T.TEXT },
   txnDate: { fontSize: 12, color: T.TEXT_FAINT, marginTop: 2 },
   txnAmount: { fontSize: 15, fontWeight: '700' },
+  retryBtn: {
+    paddingHorizontal: 24, paddingVertical: 12,
+    borderRadius: T.R_MD, borderWidth: 1.5, borderColor: T.AMBER_LINE,
+    backgroundColor: T.AMBER_SOFT,
+  },
 });

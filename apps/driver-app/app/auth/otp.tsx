@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
@@ -11,11 +11,11 @@ export default function OtpScreen() {
   const { phone } = useLocalSearchParams<{ phone: string }>();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
-  const refs = useRef<TextInput[]>([]);
+  const refs = useRef<(TextInput | null)[]>([null, null, null, null, null, null]);
   const { setAuth } = useAuthStore();
 
-  async function handleVerify() {
-    const code = otp.join('');
+  async function handleVerify(codeOverride?: string) {
+    const code = codeOverride ?? otp.join('');
     if (code.length < 6) return;
     setLoading(true);
     try {
@@ -34,15 +34,28 @@ export default function OtpScreen() {
   }
 
   function handleChange(val: string, idx: number) {
+    const digits = val.replace(/\D/g, '');
+    if (digits.length >= 6) {
+      const next = digits.slice(0, 6).split('');
+      setOtp(next);
+      refs.current[5]?.focus();
+      setTimeout(() => handleVerify(digits.slice(0, 6)), 80);
+      return;
+    }
     const next = [...otp];
-    next[idx] = val;
+    next[idx] = digits.slice(-1);
     setOtp(next);
-    if (val && idx < 5) refs.current[idx + 1]?.focus();
-    if (next.join('').length === 6) setTimeout(() => handleVerify(), 100);
+    if (digits && idx < 5) refs.current[idx + 1]?.focus();
+    if (next.join('').length === 6) setTimeout(() => handleVerify(next.join('')), 80);
   }
 
   function handleBack(idx: number) {
-    if (!otp[idx] && idx > 0) refs.current[idx - 1]?.focus();
+    if (!otp[idx] && idx > 0) {
+      const next = [...otp];
+      next[idx - 1] = '';
+      setOtp(next);
+      refs.current[idx - 1]?.focus();
+    }
   }
 
   return (
@@ -61,20 +74,23 @@ export default function OtpScreen() {
           {otp.map((digit, i) => (
             <TextInput
               key={i}
-              ref={r => { if (r) refs.current[i] = r; }}
+              ref={r => { refs.current[i] = r; }}
               value={digit}
               onChangeText={v => handleChange(v, i)}
               onKeyPress={({ nativeEvent }) => nativeEvent.key === 'Backspace' && handleBack(i)}
               keyboardType="number-pad"
-              maxLength={1}
+              maxLength={i === 0 ? 6 : 1}
+              textContentType="oneTimeCode"
+              autoComplete={Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'}
               style={[s.otpBox, digit && s.otpBoxFilled]}
               autoFocus={i === 0}
+              selectTextOnFocus
             />
           ))}
         </View>
 
         <TouchableOpacity
-          onPress={handleVerify}
+          onPress={() => handleVerify()}
           disabled={loading || otp.join('').length < 6}
           style={[s.ctaBtn, (loading || otp.join('').length < 6) && { opacity: 0.45 }]}
         >

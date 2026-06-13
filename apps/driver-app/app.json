@@ -13,6 +13,9 @@
     "ios": {
       "bundleIdentifier": "in.transitco.driver",
       "supportsTablet": false,
+      "config": {
+        "googleMapsApiKey": "AIzaSyBeQ62HN5qz2lgUuau6paxlbXtudCBG1yA"
+      },
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Transit Driver needs access to your photo library to upload your documents and profile photo.",
         "NSPhotoLibraryAddUsageDescription": "Transit Driver needs permission to save photos to your library.",
@@ -25,7 +28,7 @@
       "package": "in.transitco.driver",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0F2B5B"
+        "backgroundColor": "#F7B32B"
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",

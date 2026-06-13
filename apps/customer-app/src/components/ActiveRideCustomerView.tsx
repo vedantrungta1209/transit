@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Svg, { Path } from 'react-native-svg';
 import { T } from '../lib/theme';
 
@@ -10,6 +10,7 @@ export default function ActiveRideCustomerView({ ride, driver, driverLocation }:
     <View style={{ flex: 1 }}>
       <MapView
         style={{ flex: 1 }}
+        provider={PROVIDER_GOOGLE}
         initialRegion={{
           latitude: driverLocation?.lat || 12.9716,
           longitude: driverLocation?.lng || 77.5946,

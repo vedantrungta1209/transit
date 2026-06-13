@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, Switch, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker, Circle } from 'react-native-maps';
+import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Svg, { Path, Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { useAuthStore } from '../../src/stores/auth';
@@ -133,6 +133,7 @@ export default function HomeScreen() {
       <MapView
         ref={mapRef}
         style={{ flex: 1, backgroundColor: '#0A1C40' }}
+        provider={PROVIDER_GOOGLE}
         region={mapRegion}
         customMapStyle={darkMapStyle}
         showsUserLocation={false}

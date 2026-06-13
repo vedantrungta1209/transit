@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Alert, StyleSheet, FlatList, ActivityIndicator, Keyboard } from 'react-native';
+import {
+  View, Text, TouchableOpacity, TextInput, Alert, StyleSheet,
+  FlatList, ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, ScrollView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import axios from 'axios';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useAuthStore } from '../../src/stores/auth';
 import { useBookingStore } from '../../src/stores/booking';
-import { api, API_URL } from '../../src/lib/api';
+import { api } from '../../src/lib/api';
 import { getSocket } from '../../src/lib/socket';
 import { T } from '../../src/lib/theme';
 import VehicleSelectSheet from '../../src/components/VehicleSelectSheet';
@@ -44,13 +47,6 @@ function ShieldIcon() {
     </Svg>
   );
 }
-function ChevDownIcon() {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-      <Path d="M5 9l7 7 7-7" stroke={T.TEXT_MUTED} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-    </Svg>
-  );
-}
 function LocationDotIcon() {
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
@@ -67,7 +63,6 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
     });
     const result = res.data.results[0];
     if (!result) return 'Current Location';
-    // Use first two address components for a short label
     const parts = result.address_components.slice(0, 3).map((c: any) => c.short_name);
     return parts.join(', ');
   } catch {
@@ -82,26 +77,32 @@ export default function HomeScreen() {
   const [dropSearch, setDropSearch] = useState('');
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [dropFocused, setDropFocused] = useState(false);
   const mapRef = useRef<MapView>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Get current location + reverse geocode
+  // Get GPS + reverse geocode pickup
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Location required', 'Please enable location access to book a ride.', [
-          { text: 'Open Settings', onPress: () => Location.requestForegroundPermissionsAsync() },
-        ]);
+        Alert.alert('Location required', 'Please enable location access to book a ride.');
         return;
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       setLocation(loc);
+      mapRef.current?.animateToRegion({
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      }, 600);
       const address = await reverseGeocode(loc.coords.latitude, loc.coords.longitude);
       setPickup({ lat: loc.coords.latitude, lng: loc.coords.longitude, address });
     })();
   }, []);
 
+  // Socket events
   useEffect(() => {
     if (!token) return;
     const socket = getSocket(token);
@@ -109,17 +110,14 @@ export default function HomeScreen() {
     socket.on('ride_status_update', (data) => {
       if (data.status === 'DRIVER_ARRIVING') setStep('arriving');
       if (data.status === 'IN_PROGRESS') setStep('in_progress');
-      if (data.status === 'CANCELLED') { Alert.alert('Ride Cancelled'); reset(); }
+      if (data.status === 'CANCELLED') { Alert.alert('Ride Cancelled', 'Your ride was cancelled.'); reset(); }
     });
     socket.on('driver_location', (data) => setDriverLocation({ lat: data.lat, lng: data.lng }));
     socket.on('ride_completed', () => setStep('completed'));
-    socket.on('no_drivers_found', () => { Alert.alert('No drivers', 'No drivers available. Please try again.'); setStep('idle'); });
+    socket.on('no_drivers_found', () => { Alert.alert('No drivers', 'No drivers available nearby. Try again in a few minutes.'); setStep('idle'); });
     return () => {
-      socket.off('driver_assigned');
-      socket.off('ride_status_update');
-      socket.off('driver_location');
-      socket.off('ride_completed');
-      socket.off('no_drivers_found');
+      socket.off('driver_assigned'); socket.off('ride_status_update');
+      socket.off('driver_location'); socket.off('ride_completed'); socket.off('no_drivers_found');
     };
   }, [token]);
 
@@ -137,11 +135,16 @@ export default function HomeScreen() {
             key: MAPS_KEY,
             components: 'country:in',
             language: 'en',
+            types: 'geocode|establishment',
             ...(location ? { location: `${location.coords.latitude},${location.coords.longitude}`, radius: 50000 } : {}),
           },
         });
-        setPredictions(res.data.predictions || []);
-      } catch { /* silent */ }
+        if (res.data.status === 'OK' || res.data.status === 'ZERO_RESULTS') {
+          setPredictions(res.data.predictions || []);
+        }
+      } catch (e) {
+        // Network error — silent
+      }
       setSearchLoading(false);
     }, 350);
   }, [location]);
@@ -150,21 +153,26 @@ export default function HomeScreen() {
     Keyboard.dismiss();
     setDropSearch(p.description);
     setPredictions([]);
+    setDropFocused(false);
     try {
       const res = await axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
         params: { place_id: p.place_id, key: MAPS_KEY, fields: 'geometry,formatted_address' },
       });
       const loc = res.data.result?.geometry?.location;
-      if (!loc) return;
+      if (!loc) { Alert.alert('Error', 'Could not get location details. Try again.'); return; }
       setDrop({ lat: loc.lat, lng: loc.lng, address: p.description });
       setStep('selecting');
-      mapRef.current?.animateToRegion({
-        latitude: (pickup!.lat + loc.lat) / 2,
-        longitude: (pickup!.lng + loc.lng) / 2,
-        latitudeDelta: Math.abs(pickup!.lat - loc.lat) * 2.5 + 0.02,
-        longitudeDelta: Math.abs(pickup!.lng - loc.lng) * 2.5 + 0.02,
-      }, 600);
-    } catch { Alert.alert('Error', 'Could not get location details.'); }
+      if (pickup) {
+        mapRef.current?.animateToRegion({
+          latitude: (pickup.lat + loc.lat) / 2,
+          longitude: (pickup.lng + loc.lng) / 2,
+          latitudeDelta: Math.abs(pickup.lat - loc.lat) * 2.5 + 0.03,
+          longitudeDelta: Math.abs(pickup.lng - loc.lng) * 2.5 + 0.03,
+        }, 600);
+      }
+    } catch {
+      Alert.alert('Error', 'Could not resolve this location. Please try again.');
+    }
   }
 
   async function handleBookRide(vehicleType: string, paymentMethod: string) {
@@ -178,18 +186,20 @@ export default function HomeScreen() {
       });
       setRide(data.data.ride);
     } catch (e: any) {
-      Alert.alert('Error', e.response?.data?.error || 'Could not create ride');
+      Alert.alert('Booking failed', e.response?.data?.error || 'Could not create ride. Please try again.');
       setStep('idle');
     }
   }
 
   async function cancelRide() {
     if (!ride) return;
-    await api.patch(`/rides/${ride.id}/cancel`, { cancelledBy: user?.id, reason: 'User cancelled' });
+    try {
+      await api.patch(`/rides/${ride.id}/cancel`, { cancelledBy: user?.id, reason: 'User cancelled' });
+    } catch { /* silent */ }
     reset();
   }
 
-  const currentRegion = {
+  const mapRegion = {
     latitude: location?.coords.latitude ?? 12.9716,
     longitude: location?.coords.longitude ?? 77.5946,
     latitudeDelta: 0.05,
@@ -223,30 +233,28 @@ export default function HomeScreen() {
           ))}
           <View style={s.dashed} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6 }}>
-            <Text style={[s.bold16, { color: T.TEXT }]}>Total · Cash</Text>
+            <Text style={[s.bold16, { color: T.TEXT }]}>Total</Text>
             <Text style={[s.bold22, { color: T.TEXT }]}>₹{(Number(ride?.actualFare || 0) + 6).toLocaleString('en-IN')}</Text>
           </View>
         </View>
-        <Text style={[s.bold16, { color: T.TEXT, marginTop: 22, marginBottom: 12 }]}>Rate your ride</Text>
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 24 }}>
-          {[1, 2, 3, 4, 5].map(i => (
-            <Text key={i} style={{ fontSize: 30 }}>{i <= 4 ? '★' : '☆'}</Text>
-          ))}
-        </View>
-        <TouchableOpacity onPress={reset} style={s.amberBtn}>
+        <TouchableOpacity onPress={reset} style={[s.amberBtn, { marginTop: 20, width: '100%' }]}>
           <Text style={s.amberBtnText}>Done</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
+  const showPredictions = predictions.length > 0 && dropFocused;
+  const showVehicles = step === 'selecting' && drop && !showPredictions;
+
   return (
-    <View style={StyleSheet.absoluteFill}>
+    <View style={{ flex: 1 }}>
+      {/* Map fills background */}
       <MapView
         ref={mapRef}
         style={StyleSheet.absoluteFill}
-        initialRegion={currentRegion}
-        region={!pickup ? currentRegion : undefined}
+        provider={PROVIDER_GOOGLE}
+        initialRegion={mapRegion}
         showsUserLocation
         showsMyLocationButton={false}
       >
@@ -254,105 +262,97 @@ export default function HomeScreen() {
         {drop && <Marker coordinate={{ latitude: drop.lat, longitude: drop.lng }} pinColor={T.AMBER} />}
       </MapView>
 
-      {/* Top bar */}
+      {/* Top bar — pickup location */}
       <SafeAreaView edges={['top']} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
         <View style={s.topBar}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
             <PinIcon />
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={s.topBarLabel}>Pickup</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Text style={s.topBarCity} numberOfLines={1}>
-                  {pickup ? pickup.address.split(',')[0] : 'Locating…'}
-                </Text>
-                <ChevDownIcon />
-              </View>
+              <Text style={s.topBarCity} numberOfLines={1}>
+                {pickup ? pickup.address : 'Locating your position…'}
+              </Text>
             </View>
           </View>
-          <View style={s.avatar}>
+          <TouchableOpacity style={s.avatar}>
             <Text style={s.avatarText}>{user?.name ? user.name.slice(0, 2).toUpperCase() : 'ME'}</Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
 
-      {/* Bottom sheet */}
-      <View style={s.sheet}>
-        <View style={s.sheetHandle} />
+      {/* Bottom area with KeyboardAvoidingView */}
+      <KeyboardAvoidingView
+        style={s.kavWrapper}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+        <View style={s.sheet}>
+          <View style={s.sheetHandle} />
 
-        {/* Search box */}
-        <View style={s.searchBox}>
-          <SearchIcon />
-          <TextInput
-            value={dropSearch}
-            onChangeText={searchPlaces}
-            placeholder="Where to?"
-            placeholderTextColor={T.TEXT_FAINT}
-            style={s.searchInput}
-            returnKeyType="search"
-            autoCorrect={false}
-          />
-          {searchLoading && <ActivityIndicator size="small" color={T.AMBER_DEEP} />}
-          {dropSearch.length > 0 && !searchLoading && (
-            <TouchableOpacity onPress={() => { setDropSearch(''); setPredictions([]); setDrop(null); setStep('idle'); }}>
-              <Text style={{ color: T.TEXT_FAINT, fontSize: 16 }}>✕</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Autocomplete predictions */}
-        {predictions.length > 0 && (
-          <View style={s.predictionsContainer}>
-            <FlatList
-              data={predictions}
-              keyExtractor={p => p.place_id}
-              keyboardShouldPersistTaps="handled"
-              renderItem={({ item, index }) => (
-                <TouchableOpacity
-                  style={[s.predictionRow, index > 0 && { borderTopWidth: 1, borderTopColor: T.LINE }]}
-                  onPress={() => selectPrediction(item)}
-                >
-                  <View style={s.predictionIcon}>
-                    <LocationDotIcon />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.predictionMain} numberOfLines={1}>
-                      {item.structured_formatting.main_text}
-                    </Text>
-                    <Text style={s.predictionSub} numberOfLines={1}>
-                      {item.structured_formatting.secondary_text}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              )}
+          {/* Drop search */}
+          <View style={s.searchBox}>
+            <SearchIcon />
+            <TextInput
+              value={dropSearch}
+              onChangeText={searchPlaces}
+              onFocus={() => setDropFocused(true)}
+              onBlur={() => setTimeout(() => setDropFocused(false), 200)}
+              placeholder="Where to?"
+              placeholderTextColor={T.TEXT_FAINT}
+              style={s.searchInput}
+              returnKeyType="search"
+              autoCorrect={false}
             />
-          </View>
-        )}
-
-        {step === 'selecting' && drop && predictions.length === 0 ? (
-          <VehicleSelectSheet pickup={pickup!} drop={drop} onBook={handleBookRide} onBack={() => { setStep('idle'); setDropSearch(''); setDrop(null); }} />
-        ) : predictions.length === 0 ? (
-          <>
-            {/* Use current location shortcut */}
-            {!pickup && (
-              <TouchableOpacity
-                style={s.currentLocRow}
-                onPress={async () => {
-                  const { status } = await Location.requestForegroundPermissionsAsync();
-                  if (status !== 'granted') return;
-                  const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-                  setLocation(loc);
-                  const address = await reverseGeocode(loc.coords.latitude, loc.coords.longitude);
-                  setPickup({ lat: loc.coords.latitude, lng: loc.coords.longitude, address });
-                }}
-              >
-                <View style={[s.predictionIcon, { backgroundColor: T.AMBER_SOFT }]}>
-                  <LocationDotIcon />
-                </View>
-                <Text style={[s.savedLabel, { color: T.AMBER_DEEP }]}>Use current location</Text>
+            {searchLoading && <ActivityIndicator size="small" color={T.AMBER_DEEP} />}
+            {dropSearch.length > 0 && !searchLoading && (
+              <TouchableOpacity onPress={() => { setDropSearch(''); setPredictions([]); setDrop(null); setStep('idle'); }}>
+                <Text style={{ color: T.TEXT_FAINT, fontSize: 18, lineHeight: 20 }}>✕</Text>
               </TouchableOpacity>
             )}
+          </View>
 
-            {/* Promo banner */}
+          {/* Autocomplete list */}
+          {showPredictions && (
+            <View style={s.predictionsContainer}>
+              <FlatList
+                data={predictions}
+                keyExtractor={p => p.place_id}
+                keyboardShouldPersistTaps="handled"
+                scrollEnabled={false}
+                renderItem={({ item, index }) => (
+                  <TouchableOpacity
+                    style={[s.predictionRow, index > 0 && { borderTopWidth: 1, borderTopColor: T.LINE }]}
+                    onPress={() => selectPrediction(item)}
+                  >
+                    <View style={s.predictionIcon}>
+                      <LocationDotIcon />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.predictionMain} numberOfLines={1}>
+                        {item.structured_formatting?.main_text || item.description}
+                      </Text>
+                      <Text style={s.predictionSub} numberOfLines={1}>
+                        {item.structured_formatting?.secondary_text}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )}
+
+          {/* Vehicle select */}
+          {showVehicles && (
+            <VehicleSelectSheet
+              pickup={pickup!}
+              drop={drop}
+              onBook={handleBookRide}
+              onBack={() => { setStep('idle'); setDropSearch(''); setDrop(null); }}
+            />
+          )}
+
+          {/* Default idle state */}
+          {!showPredictions && !showVehicles && (
             <View style={s.promoBanner}>
               <ShieldIcon />
               <View>
@@ -360,14 +360,17 @@ export default function HomeScreen() {
                 <Text style={s.promoSub}>The price you see is the price you pay.</Text>
               </View>
             </View>
-          </>
-        ) : null}
-      </View>
+          )}
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
 
 const s = StyleSheet.create({
+  kavWrapper: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+  },
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     marginHorizontal: 16, marginTop: 8,
@@ -376,13 +379,13 @@ const s = StyleSheet.create({
     ...T.SHADOW_MD,
   },
   topBarLabel: { fontSize: 9, fontWeight: '600', letterSpacing: 1.6, color: T.TEXT_FAINT, textTransform: 'uppercase' },
-  topBarCity: { fontSize: 14, fontWeight: '600', color: T.TEXT, maxWidth: 200 },
+  topBarCity: { fontSize: 14, fontWeight: '600', color: T.TEXT },
   avatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: T.NAVY, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: '#fff', fontWeight: '600', fontSize: 14 },
   sheet: {
-    position: 'absolute', left: 0, right: 0, bottom: 0,
-    backgroundColor: T.SURFACE, borderTopLeftRadius: T.R_XL, borderTopRightRadius: T.R_XL,
-    paddingHorizontal: 20, paddingTop: 14, paddingBottom: 30,
+    backgroundColor: T.SURFACE,
+    borderTopLeftRadius: T.R_XL, borderTopRightRadius: T.R_XL,
+    paddingHorizontal: 20, paddingTop: 14, paddingBottom: Platform.OS === 'ios' ? 30 : 20,
     ...T.SHADOW_SHEET,
   },
   sheetHandle: { width: 40, height: 5, borderRadius: 99, backgroundColor: T.LINE, alignSelf: 'center', marginBottom: 16 },
@@ -397,20 +400,16 @@ const s = StyleSheet.create({
   predictionsContainer: {
     backgroundColor: T.SURFACE, borderRadius: T.R_MD,
     borderWidth: 1, borderColor: T.LINE,
-    marginBottom: 12, overflow: 'hidden',
-    maxHeight: 260,
+    marginBottom: 8, overflow: 'hidden',
     ...T.SHADOW_SM,
   },
   predictionRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   predictionIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: T.SURFACE_2, alignItems: 'center', justifyContent: 'center' },
   predictionMain: { fontSize: 14, fontWeight: '600', color: T.TEXT },
   predictionSub: { fontSize: 12, color: T.TEXT_MUTED, marginTop: 1 },
-  currentLocRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, marginBottom: 4 },
-  savedLabel: { fontSize: 15, fontWeight: '600', color: T.TEXT },
   promoBanner: {
     backgroundColor: T.NAVY, borderRadius: T.R_LG, paddingHorizontal: 18, paddingVertical: 16,
-    flexDirection: 'row', alignItems: 'center', gap: 14, overflow: 'hidden',
-    marginTop: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 14,
   },
   promoTitle: { fontSize: 15, fontWeight: '600', color: '#fff' },
   promoSub: { fontSize: 12.5, color: T.ON_NAVY_MUT, marginTop: 2 },
@@ -419,13 +418,13 @@ const s = StyleSheet.create({
   arrivedSub: { fontSize: 14, color: T.TEXT_MUTED, marginTop: 3 },
   card: { backgroundColor: T.SURFACE, borderRadius: T.R_LG, padding: 20, ...T.SHADOW_SM, borderWidth: 1, borderColor: T.LINE },
   eyebrow: { fontSize: 11, fontWeight: '600', letterSpacing: 1.6, color: T.TEXT_FAINT, textTransform: 'uppercase' },
-  mono: { fontSize: 12, color: T.TEXT_FAINT, fontVariant: ['tabular-nums'] },
+  mono: { fontSize: 12, color: T.TEXT_FAINT },
   receiptRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
   receiptLabel: { fontSize: 14, color: T.TEXT_MUTED },
   receiptVal: { fontSize: 14, color: T.TEXT, fontWeight: '500' },
   dashed: { borderTopWidth: 1, borderStyle: 'dashed', borderColor: T.LINE, marginVertical: 8 },
   bold16: { fontSize: 16, fontWeight: '600' },
   bold22: { fontSize: 22, fontWeight: '700' },
-  amberBtn: { width: '100%', height: 56, borderRadius: T.R_MD, backgroundColor: T.AMBER, alignItems: 'center', justifyContent: 'center', ...T.SHADOW_AMBER },
+  amberBtn: { height: 56, borderRadius: T.R_MD, backgroundColor: T.AMBER, alignItems: 'center', justifyContent: 'center', ...T.SHADOW_AMBER },
   amberBtnText: { fontSize: 17, fontWeight: '600', color: T.ON_AMBER },
 });

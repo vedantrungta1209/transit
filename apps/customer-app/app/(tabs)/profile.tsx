@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, Modal, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import Svg, { Path } from 'react-native-svg';
 import { useAuthStore } from '../../src/stores/auth';
 import { disconnectSocket } from '../../src/lib/socket';
@@ -20,10 +21,19 @@ const MENU_ITEMS = [
 ];
 
 export default function ProfileScreen() {
-  const { user, logout, setUser } = useAuthStore();
+  const { user: storedUser, logout, setUser } = useAuthStore();
   const [editField, setEditField] = useState<EditField>(null);
   const [input, setInput] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const { data: fetchedUser, isLoading: profileLoading } = useQuery({
+    queryKey: ['profile'],
+    queryFn: () => api.get('/users/me').then(r => r.data.data),
+    retry: 2,
+    onSuccess: (data: any) => { if (data) setUser(data); },
+  } as any);
+
+  const user = fetchedUser || storedUser;
 
   async function handleLogout() {
     await logout();
@@ -72,6 +82,17 @@ export default function ProfileScreen() {
           },
         },
       ]
+    );
+  }
+
+  if (profileLoading && !user) {
+    return (
+      <SafeAreaView style={s.container}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={T.NAVY} />
+          <Text style={{ fontSize: 14, color: T.TEXT_MUTED, marginTop: 12 }}>Loading profile…</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 

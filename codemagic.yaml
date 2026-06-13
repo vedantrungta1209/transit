@@ -526,6 +526,7 @@ workflows:
           def glideVersion = '4.16.0'
 
           dependencies {
+            api project(':expo-modules-core')
             api "com.github.bumptech.glide:glide:${glideVersion}"
           }
           GRADLEOF
@@ -560,6 +561,7 @@ workflows:
           }
 
           dependencies {
+            api project(':expo-modules-core')
             implementation "androidx.activity:activity-ktx:1.10.0"
             implementation "androidx.appcompat:appcompat:1.7.0"
             implementation "androidx.exifinterface:exifinterface:1.3.7"

@@ -303,6 +303,9 @@ workflows:
           cd apps/customer-app/android
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
           sed -i '' "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
+          # Force targetSdkVersion 35 — expo SDK 52 prebuild defaults to 34
+          sed -i '' "s/targetSdkVersion [0-9]*/targetSdkVersion 35/" app/build.gradle
+          grep "targetSdkVersion" app/build.gradle
 
       - name: Patch expo-modules-core Kotlin
         script: |

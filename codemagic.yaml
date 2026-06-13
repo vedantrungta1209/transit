@@ -515,11 +515,11 @@ workflows:
               versionName "5.1.0"
             }
             compileOptions {
-              sourceCompatibility JavaVersion.VERSION_11
-              targetCompatibility JavaVersion.VERSION_11
+              sourceCompatibility JavaVersion.VERSION_17
+              targetCompatibility JavaVersion.VERSION_17
             }
             kotlinOptions {
-              jvmTarget = '11'
+              jvmTarget = '17'
             }
           }
 
@@ -548,11 +548,11 @@ workflows:
               testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
             }
             compileOptions {
-              sourceCompatibility JavaVersion.VERSION_11
-              targetCompatibility JavaVersion.VERSION_11
+              sourceCompatibility JavaVersion.VERSION_17
+              targetCompatibility JavaVersion.VERSION_17
             }
             kotlinOptions {
-              jvmTarget = '11'
+              jvmTarget = '17'
             }
             testOptions {
               unitTests.includeAndroidResources = true

@@ -68,7 +68,7 @@ workflows:
           )
           content = re.sub(r'(?m)^(android\s*\{)', lambda m: loader + m.group(0), content, count=1)
           content = re.sub(r'(\bsigningConfigs\s*\{[^\n]*\n)', lambda m: m.group(0) + release_block, content, count=1)
-          content = re.sub(r'signingConfig\s+signingConfigs\.debug', 'signingConfig signingConfigs.release', content, count=1)
+          content = re.sub(r'signingConfig\s+signingConfigs\.debug', 'signingConfig signingConfigs.release', content)
           if 'signingConfigs.release' not in content:
               print('❌ Signing patch failed. Dumping build.gradle:'); print(content[:3000]); sys.exit(1)
           with open(GRADLE, 'w') as f:
@@ -177,7 +177,7 @@ workflows:
           )
           content = re.sub(r'(?m)^(android\s*\{)', lambda m: loader + m.group(0), content, count=1)
           content = re.sub(r'(\bsigningConfigs\s*\{[^\n]*\n)', lambda m: m.group(0) + release_block, content, count=1)
-          content = re.sub(r'signingConfig\s+signingConfigs\.debug', 'signingConfig signingConfigs.release', content, count=1)
+          content = re.sub(r'signingConfig\s+signingConfigs\.debug', 'signingConfig signingConfigs.release', content)
           if 'signingConfigs.release' not in content:
               print('❌ Signing patch failed. Dumping build.gradle:'); print(content[:3000]); sys.exit(1)
           with open(GRADLE, 'w') as f:
@@ -304,7 +304,7 @@ workflows:
           sed -i '' "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" app/build.gradle
           sed -i '' "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
           # Force targetSdkVersion 35 — expo SDK 52 prebuild defaults to 34
-          sed -i '' "s/targetSdkVersion [0-9]*/targetSdkVersion 35/" app/build.gradle
+          sed -i '' "s/targetSdkVersion .*/targetSdkVersion 35/" app/build.gradle
           grep "targetSdkVersion" app/build.gradle
 
       - name: Patch expo-modules-core Kotlin
@@ -445,7 +445,8 @@ workflows:
           )
           content = re.sub(r'(?m)^(android\s*\{)', lambda m: loader + m.group(0), content, count=1)
           content = re.sub(r'(\bsigningConfigs\s*\{[^\n]*\n)', lambda m: m.group(0) + release_block, content, count=1)
-          content = re.sub(r'signingConfig\s+signingConfigs\.debug', 'signingConfig signingConfigs.release', content, count=1)
+          # count=0 replaces ALL occurrences — the release block's signingConfig is the 2nd match
+          content = re.sub(r'signingConfig\s+signingConfigs\.debug', 'signingConfig signingConfigs.release', content)
           if 'signingConfigs.release' not in content:
               print('❌ Signing patch failed. Dumping build.gradle:'); print(content[:3000]); sys.exit(1)
           with open(GRADLE, 'w') as f:
